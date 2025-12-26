@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monopoly Bank QR Real</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        :root {
+            --primary: #27ae60; --dark: #2c3e50; --danger: #e74c3c;
+            --radius: 12px; --font-main: sans-serif;
+        }
+        * { box-sizing: border-box; tap-highlight-color: transparent; }
+        body { margin: 0; font-family: var(--font-main); background-color: #f4f7f6; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .hidden { display: none !important; }
+        .btn { padding: 12px; border-radius: var(--radius); width: 100%; border: none; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { border: 2px solid #ccc; background: transparent; color: #555; }
+
+        /* HEADER & LAYOUT */
+        header { background: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; }
+
+        /* CARDS */
+        .card { background: white; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .player-row { display: flex; align-items: center; justify-content: space-between; border-left: 5px solid #ccc; padding-left: 10px; }
+        .money { font-family: monospace; font-size: 1.2rem; font-weight: bold; }
+
+        /* QR DISPLAY */
+        #qr-display-container { text-align: center; margin-top: 10px; display: flex; flex-direction: column; align-items: center; }
+        #qr-output img { border: 10px solid white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        /* SCANNER OVERLAY */
+        #scanner-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 200;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #reader { width: 100%; max-width: 500px; }
+        
+        /* BOTTOM NAV */
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid #eee; }
+        .nav-item { border: none; background: none; font-size: 1.5rem; }
+
+        /* FAB SCAN BUTTON */
+        .fab { position: fixed; bottom: 80px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--dark); color: white; font-size: 24px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <header id="app-header" class="hidden">
+        <b>Monopoly QR</b>
+        <span id="game-status">...</span>
+    </header>
+
+    <main id="main-container">
+        </main>
+
+    <button id="fab-scan" class="fab hidden" onclick="app.startRealScanner()">📷</button>
+
+    <nav id="bottom-nav" class="hidden">
+        <button class="nav-item" onclick="app.renderDashboard()">🏠</button>
+        <button class="nav-item" onclick="app.renderProperties()">🏢</button>
+        <button class="nav-item" onclick="app.renderHistory()">📜</button>
+    </nav>
+
+    <div id="scanner-overlay" class="hidden">
+        <div style="color:white; margin-bottom:20px; z-index:201;">Apuntando cámara...</div>
+        <div id="reader"></div>
+        <button class="btn btn-danger" style="width: auto; margin-top: 20px; z-index:201;" onclick="app.stopScanner()">Cerrar Cámara</button>
+    </div>
+
+    <div id="modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:150; display:flex; align-items:center; justify-content:center;">
+        <div style="background:white; width:90%; max-width:400px; padding:20px; border-radius:12px;">
+            <h2 id="modal-title"></h2>
+            <div id="modal-body"></div>
+            <button class="btn btn-outline" onclick="document.getElementById('modal').classList.add('hidden')">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DATOS Y LÓGICA (Simplificada para el ejemplo) ---
+        const app = {
+            data: { players: [], properties: [], transactions: [] },
+            scanContext: null, // 'pay', 'receive', etc.
+            html5QrCode: null, // Instancia del escáner
+
+            init: function() {
+                // Cargar datos (Simulado localStorage)
+                const saved = localStorage.getItem('monopoly_qr_data');
+                if(saved) {
+                    this.data = JSON.parse(saved);
+                    this.renderDashboard();
+                } else {
+                    this.renderSetup();
+                }
+            },
+
+            save: function() {
+                localStorage.setItem('monopoly_qr_data', JSON.stringify(this.data));
+            },
+
+            // --- VISTA CONFIGURACIÓN ---
+            renderSetup: function() {
+                document.getElementById('main-container').innerHTML = `
+                    <div class="card">
+                        <h2>Nueva Partida</h2>
+                        <input type="text" id="p1" placeholder="Jugador 1" class="btn btn-outline" style="text-align:left">
+                        <input type="text" id="p2" placeholder="Jugador 2" class="btn btn-outline" style="text-align:left">
+                        <button class="btn btn-primary" onclick="app.startGame()">Comenzar</button>
+                    </div>
+                `;
+                this.toggleUI(false);
+            },
+
+            startGame: function() {
+                const n1 = document.getElementById('p1').value || 'Jugador 1';
+                const n2 = document.getElementById('p2').value || 'Jugador 2';
+                this.data.players = [
+                    { id: 'usr_'+Date.now()+'_1', name: n1, balance: 1500, color: '#3498db' },
+                    { id: 'usr_'+Date.now()+'_2', name: n2, balance: 1500, color: '#e74c3c' }
+                ];
+                this.save();
+                this.renderDashboard();
+            },
+
+            toggleUI: function(show) {
+                const list = ['app-header', 'bottom-nav', 'fab-scan'];
+                list.forEach(id => document.getElementById(id).classList.toggle('hidden', !show));
+            },
+
+            // --- DASHBOARD ---
+            renderDashboard: function() {
+                this.toggleUI(true);
+                const container = document.getElementById('main-container');
+                let html = `<div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <button class="btn btn-primary" onclick="app.setScanContext('bank_go')">💰 GO (+200)</button>
+                    <button class="btn btn-outline" onclick="app.setScanContext('pay_bank')">💸 Pagar</button>
+                </div>`;
+                
+                this.data.players.forEach(p => {
+                    html += `
+                        <div class="card player-row" style="border-left-color:${p.color}" onclick="app.showPlayer('${p.id}')">
+                            <div>
+                                <div>${p.name}</div>
+                                <div class="money">$${p.balance}</div>
+                            </div>
+                            <button class="btn btn-outline" style="width:auto; padding:5px 10px;" onclick="event.stopPropagation(); app.showQR('${p.id}')">Ver QR</button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            },
+
+            // --- GENERACIÓN DE QR ---
+            showQR: function(playerId) {
+                const p = this.data.players.find(x => x.id === playerId);
+                const modal = document.getElementById('modal');
+                const title = document.getElementById('modal-title');
+                const body = document.getElementById('modal-body');
+                
+                modal.classList.remove('hidden');
+                title.innerText = `Tarjeta de ${p.name}`;
+                body.innerHTML = `<div id="qr-output"></div><p style="text-align:center">Escanea este código para cobrar/pagar</p>`;
+                
+                // Generar QR Real
+                new QRCode(document.getElementById("qr-output"), {
+                    text: p.id, // El QR contiene SOLO el ID del usuario
+                    width: 200,
+                    height: 200
+                });
+            },
+
+            // --- LECTURA DE QR (CÁMARA REAL) ---
+            setScanContext: function(ctx) {
+                this.scanContext = ctx;
+                this.startRealScanner();
+            },
+
+            startRealScanner: function() {
+                document.getElementById('scanner-overlay').classList.remove('hidden');
+                
+                // Configuración de html5-qrcode
+                this.html5QrCode = new Html5Qrcode("reader");
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                
+                this.html5QrCode.start(
+                    { facingMode: "environment" }, // Cámara trasera
+                    config,
+                    (decodedText, decodedResult) => {
+                        // ÉXITO AL LEER
+                        this.handleScan(decodedText);
+                    },
+                    (errorMessage) => {
+                        // Error de lectura (pasa mucho mientras enfoca, ignorar)
+                    }
+                ).catch(err => {
+                    alert("Error al iniciar cámara: " + err + "\n\n¿Estás usando HTTPS o Localhost?");
+                    this.stopScanner();
+                });
+            },
+
+            stopScanner: function() {
+                if(this.html5QrCode) {
+                    this.html5QrCode.stop().then(() => {
+                        document.getElementById('scanner-overlay').classList.add('hidden');
+                        this.html5QrCode.clear();
+                    }).catch(err => console.log(err));
+                } else {
+                    document.getElementById('scanner-overlay').classList.add('hidden');
+                }
+            },
+
+            // --- MANEJO DEL RESULTADO DEL QR ---
+            handleScan: function(scannedId) {
+                this.stopScanner(); // Detener cámara inmediatamente
+                
+                const player = this.data.players.find(p => p.id === scannedId);
+                if(!player) return alert("QR Inválido o Jugador no encontrado");
+
+                if (this.scanContext === 'bank_go') {
+                    player.balance += 200;
+                    alert(`✅ ¡${player.name} cobró $200!`);
+                } else if (this.scanContext === 'pay_bank') {
+                    const monto = prompt(`¿Cuánto paga ${player.name} al banco?`);
+                    if(monto) {
+                        player.balance -= parseInt(monto);
+                        alert(`✅ Pago registrado.`);
+                    }
+                } else {
+                    // Si no hay contexto, solo mostrar detalles
+                    this.showPlayer(scannedId);
+                }
+                
+                this.scanContext = null;
+                this.save();
+                this.renderDashboard();
+            },
+
+            showPlayer: function(id) {
+                const p = this.data.players.find(x=>x.id===id);
+                alert(`Detalles de ${p.name}\nSaldo: $${p.balance}`);
+            },
+
+            renderProperties: function() { document.getElementById('main-container').innerHTML = '<div class="card">Propiedades (En construcción)</div>'; },
+            renderHistory: function() { document.getElementById('main-container').innerHTML = '<div class="card">Historial (En construcción)</div>'; }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>

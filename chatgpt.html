@@ -1,0 +1,2875 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Banco Virtual (QR) — Monopoly</title>
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --panel:#111827;
+      --panel2:#0f172a;
+      --card:#0b1224;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --brand:#7c3aed;
+      --brand2:#22c55e;
+      --danger:#ef4444;
+      --warn:#f59e0b;
+      --line:rgba(148,163,184,.16);
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius2:14px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(124,58,237,.25), transparent 55%),
+                  radial-gradient(900px 700px at 120% 0%, rgba(34,197,94,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit}
+    button, input, select, textarea{font-family:inherit}
+    .app{
+      min-height:100dvh;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      position:sticky; top:0;
+      z-index:10;
+      background: linear-gradient(to bottom, rgba(11,15,23,.95), rgba(11,15,23,.55));
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+      padding: calc(14px + var(--safe-top)) 14px 12px;
+    }
+    .topbar .row{display:flex; align-items:center; gap:10px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      background: rgba(148,163,184,.08);
+      border:1px solid var(--line);
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .title{
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size:16px;
+      line-height:1.1;
+    }
+    .subtitle{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:3px;
+      line-height:1.2;
+    }
+    .spacer{flex:1}
+    .iconbtn{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:40px; height:40px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(148,163,184,.06);
+      color:var(--text);
+      cursor:pointer;
+      transition:.15s transform ease;
+    }
+    .iconbtn:active{transform:scale(.98)}
+    .content{
+      padding: 14px 14px calc(84px + var(--safe-bottom));
+      max-width: 980px;
+      width:100%;
+      margin: 0 auto;
+    }
+    .grid{display:grid; gap:12px}
+    .card{
+      background: linear-gradient(180deg, rgba(17,24,39,.86), rgba(15,23,42,.84));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:flex-start; gap:10px;
+    }
+    .card .head h3{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .card .head p{
+      margin:4px 0 0;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .card .body{padding:14px}
+    .row{display:flex; gap:10px; align-items:center}
+    .row.wrap{flex-wrap:wrap}
+    .col{display:flex; flex-direction:column; gap:8px}
+    .muted{color:var(--muted)}
+    .kpi{
+      display:flex; flex-direction:column; gap:4px;
+      padding:12px;
+      border-radius: var(--radius2);
+      border:1px solid var(--line);
+      background: rgba(2,6,23,.35);
+    }
+    .kpi .label{font-size:12px; color:var(--muted)}
+    .kpi .value{font-size:18px; font-weight:800}
+    .tag{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(148,163,184,.06);
+      color:var(--muted);
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(148,163,184,.08);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:700;
+      font-size:13px;
+      transition:.15s transform ease, .15s background ease;
+      user-select:none;
+    }
+    .btn:active{transform:scale(.985)}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(124,58,237,.95), rgba(99,102,241,.85));
+      border-color: rgba(124,58,237,.35);
+    }
+    .btn.good{
+      background: linear-gradient(135deg, rgba(34,197,94,.95), rgba(16,185,129,.85));
+      border-color: rgba(34,197,94,.35);
+    }
+    .btn.danger{
+      background: linear-gradient(135deg, rgba(239,68,68,.92), rgba(245,158,11,.25));
+      border-color: rgba(239,68,68,.4);
+    }
+    .btn.ghost{
+      background: transparent;
+      border-color: var(--line);
+    }
+    .btn.small{padding:9px 10px; border-radius:12px; font-size:12px}
+    .btn.full{width:100%}
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+    }
+    .form{
+      display:grid;
+      gap:10px;
+    }
+    .field{display:grid; gap:6px}
+    .field label{font-size:12px; color:var(--muted)}
+    .field input, .field select, .field textarea{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(2,6,23,.35);
+      color: var(--text);
+      outline:none;
+    }
+    .field textarea{min-height:80px; resize:vertical}
+    .helper{font-size:12px; color:var(--muted); line-height:1.35}
+    .list{
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .item{
+      display:flex; align-items:center; gap:10px;
+      padding:12px;
+      border-radius: var(--radius2);
+      border:1px solid var(--line);
+      background: rgba(2,6,23,.35);
+    }
+    .item .meta{flex:1}
+    .item .meta .name{font-weight:800; font-size:13px}
+    .item .meta .sub{font-size:12px; color:var(--muted); margin-top:2px}
+    .dot{
+      width:12px; height:12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.25);
+      flex:0 0 auto;
+    }
+    .bottomnav{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      z-index:20;
+      padding: 10px 10px calc(10px + var(--safe-bottom));
+      background: linear-gradient(to top, rgba(11,15,23,.98), rgba(11,15,23,.65));
+      backdrop-filter: blur(10px);
+      border-top:1px solid var(--line);
+    }
+    .tabs{
+      max-width:980px; margin:0 auto;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:8px;
+    }
+    .tab{
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:6px;
+      padding:10px 8px;
+      border-radius:16px;
+      border:1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      color: var(--text);
+      background: rgba(124,58,237,.14);
+      border-color: rgba(124,58,237,.3);
+    }
+    .tab svg{width:20px; height:20px; opacity:.95}
+    .tab span{font-size:11px; font-weight:700}
+    .pill2{
+      padding:10px 12px;
+      border-radius: 16px;
+      border:1px solid var(--line);
+      background: rgba(2,6,23,.35);
+    }
+    .two{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    @media (min-width: 820px){
+      .two{grid-template-columns: 1.2fr .8fr;}
+      .tabs{grid-template-columns: repeat(5, 1fr);}
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      background: rgba(0,0,0,.55);
+      z-index:50;
+      padding: 14px 14px calc(14px + var(--safe-bottom));
+    }
+    .modal.show{display:flex}
+    .sheet{
+      width:min(980px, 100%);
+      max-height: 88dvh;
+      overflow:auto;
+      border-radius: 22px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(17,24,39,.96), rgba(15,23,42,.96));
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    }
+    .sheet .sheetHead{
+      position:sticky; top:0;
+      background: linear-gradient(180deg, rgba(17,24,39,.98), rgba(17,24,39,.86));
+      border-bottom:1px solid var(--line);
+      padding:14px;
+      display:flex; align-items:center; gap:10px;
+      z-index:2;
+    }
+    .sheet .sheetHead h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .sheet .sheetBody{padding:14px}
+    .divider{height:1px; background:var(--line); margin:12px 0}
+    .notice{
+      padding:12px;
+      border-radius: var(--radius2);
+      border:1px solid rgba(245,158,11,.35);
+      background: rgba(245,158,11,.10);
+      color: #fde68a;
+      font-size:12px;
+      line-height:1.35;
+    }
+    .ok{
+      padding:12px;
+      border-radius: var(--radius2);
+      border:1px solid rgba(34,197,94,.35);
+      background: rgba(34,197,94,.10);
+      color:#bbf7d0;
+      font-size:12px;
+      line-height:1.35;
+    }
+    .dangerBox{
+      padding:12px;
+      border-radius: var(--radius2);
+      border:1px solid rgba(239,68,68,.35);
+      background: rgba(239,68,68,.10);
+      color:#fecaca;
+      font-size:12px;
+      line-height:1.35;
+    }
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .qrWrap{
+      display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;
+    }
+    canvas.qr{
+      width:180px; height:180px;
+      border-radius:16px;
+      background:#fff;
+      padding:10px;
+    }
+    video#cam{
+      width:100%;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background: #000;
+      max-height: 44dvh;
+      object-fit: cover;
+    }
+    .hintRow{
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .segmented{
+      display:flex;
+      padding:4px;
+      border-radius: 16px;
+      border:1px solid var(--line);
+      background: rgba(2,6,23,.35);
+      gap:4px;
+      overflow:auto;
+    }
+    .segmented button{
+      flex:1;
+      border-radius: 12px;
+      border:1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      padding:10px;
+      font-weight:800;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .segmented button.active{
+      background: rgba(124,58,237,.18);
+      border-color: rgba(124,58,237,.28);
+      color: var(--text);
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(2,6,23,.35);
+      font-size:12px;
+      color: var(--muted);
+    }
+    .chip strong{color:var(--text)}
+    .right{margin-left:auto}
+    .small{font-size:12px}
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="row">
+      <div>
+        <div class="title">Banco Virtual (QR)</div>
+        <div class="subtitle" id="topSubtitle">Sin partida activa</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="pill" id="statusPill">● Offline • IndexedDB</span>
+      <button class="iconbtn" id="btnQuickScan" title="Escanear QR / Seleccionar jugador">
+        <!-- camera -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-2h6l2 2h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </button>
+      <button class="iconbtn" id="btnSettings" title="Ajustes / Exportar / Borrar">
+        <!-- gear -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+          <path d="M19.4 15a7.9 7.9 0 0 0 .1-1 7.9 7.9 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7.9 7.9 0 0 0-.1 1 7.9 7.9 0 0 0 .1 1l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <main class="content">
+    <section id="page-home" class="page">
+      <div class="two">
+        <div class="grid">
+          <div class="card">
+            <div class="head">
+              <div style="flex:1">
+                <h3>Partida</h3>
+                <p>Crear, reanudar, pausar o finalizar una partida. Todo se guarda en IndexedDB (persistente).</p>
+              </div>
+              <span class="tag" id="gameStateTag">Sin partida</span>
+            </div>
+            <div class="body grid">
+              <div class="row wrap">
+                <button class="btn primary" id="btnNewGame">+ Nueva partida</button>
+                <button class="btn ghost" id="btnResume" disabled>Reanudar</button>
+                <button class="btn ghost" id="btnPause" disabled>Pausar</button>
+                <button class="btn danger" id="btnEndGame" disabled>Finalizar</button>
+              </div>
+              <div class="row wrap">
+                <div class="kpi" style="flex:1">
+                  <div class="label">Jugadores</div>
+                  <div class="value" id="kpiPlayers">—</div>
+                </div>
+                <div class="kpi" style="flex:1">
+                  <div class="label">Turno actual</div>
+                  <div class="value" id="kpiTurn">—</div>
+                </div>
+                <div class="kpi" style="flex:1">
+                  <div class="label">Transacciones</div>
+                  <div class="value" id="kpiTx">—</div>
+                </div>
+              </div>
+              <div class="pill2">
+                <div class="row wrap" style="gap:8px">
+                  <span class="chip">💳 <strong>QR</strong> para identificar jugadores</span>
+                  <span class="chip">🧾 <strong>Auditoría</strong> de movimientos</span>
+                  <span class="chip">🏠 <strong>Propiedades</strong> + hipoteca + construcción</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="head">
+              <div style="flex:1">
+                <h3>Acciones rápidas</h3>
+                <p>Las operaciones más comunes del “Banco Virtual”.</p>
+              </div>
+            </div>
+            <div class="body grid">
+              <div class="row wrap">
+                <button class="btn good" id="btnQuickCredit" disabled>+ Cobrar del banco</button>
+                <button class="btn" id="btnQuickPay" disabled>− Pagar al banco</button>
+                <button class="btn" id="btnQuickTransfer" disabled>↔ Transferir</button>
+                <button class="btn" id="btnQuickRent" disabled>🏷️ Pagar renta</button>
+              </div>
+              <div class="row wrap">
+                <button class="btn" id="btnQuickBuyProp" disabled>🏠 Comprar propiedad</button>
+                <button class="btn" id="btnQuickBuild" disabled>🏗️ Casas/Hotel</button>
+                <button class="btn" id="btnQuickJail" disabled>🚔 Cárcel</button>
+                <button class="btn" id="btnQuickCard" disabled>🎴 Carta</button>
+              </div>
+              <div class="notice" id="homeNotice" style="display:none"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="head">
+              <div style="flex:1">
+                <h3>Estado financiero</h3>
+                <p>Ranking rápido y alertas de saldo bajo / bancarrota.</p>
+              </div>
+            </div>
+            <div class="body">
+              <div class="list" id="homePlayersList"></div>
+              <div class="divider"></div>
+              <div class="helper">Tip: toca un jugador para ver su QR, saldo, propiedades e historial.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-players" class="page" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <div class="head">
+            <div style="flex:1">
+              <h3>Jugadores</h3>
+              <p>Gestiona jugadores, genera/escanea QR, consulta saldo y estado (cárcel/bancarrota).</p>
+            </div>
+            <button class="btn small" id="btnAddPlayer" disabled>+ Agregar</button>
+          </div>
+          <div class="body">
+            <div class="list" id="playersList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-bank" class="page" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <div class="head">
+            <div style="flex:1">
+              <h3>Banco</h3>
+              <p>Pagos/cobros al banco, transferencias, rentas, impuestos, GO, multas, etc.</p>
+            </div>
+          </div>
+          <div class="body grid">
+            <div class="segmented" id="bankSegment">
+              <button data-mode="credit" class="active">Cobrar</button>
+              <button data-mode="pay">Pagar</button>
+              <button data-mode="transfer">Transferir</button>
+              <button data-mode="rent">Renta</button>
+            </div>
+
+            <div id="bankForms"></div>
+
+            <div class="divider"></div>
+            <div class="row wrap">
+              <button class="btn ghost" id="btnUndo" disabled>↩ Deshacer última transacción</button>
+              <span class="helper">Se revierte creando un movimiento inverso (auditable).</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-props" class="page" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <div class="head">
+            <div style="flex:1">
+              <h3>Propiedades</h3>
+              <p>Comprar, vender al banco, hipotecar/deshipotecar, construir casas/hotel y calcular rentas.</p>
+            </div>
+            <button class="btn small" id="btnPropActions" disabled>⚙️ Acciones</button>
+          </div>
+          <div class="body grid">
+            <div class="field">
+              <label>Filtrar</label>
+              <input id="propFilter" placeholder="Ej: Marrón, Ferrocarril, Luz, Calle, dueño..." />
+            </div>
+            <div class="list" id="propsList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-audit" class="page" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <div class="head">
+            <div style="flex:1">
+              <h3>Auditoría</h3>
+              <p>Historial completo, exportación por JSON y control de integridad.</p>
+            </div>
+            <button class="btn small" id="btnExport" disabled>⬇ Exportar JSON</button>
+          </div>
+          <div class="body grid">
+            <div class="row wrap">
+              <span class="chip">🧾 Movimientos: <strong id="auditCount">—</strong></span>
+              <span class="chip">🕒 Último: <strong id="auditLast">—</strong></span>
+            </div>
+            <div class="list" id="auditList"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="head">
+            <div style="flex:1">
+              <h3>Herramientas de partida</h3>
+              <p>Limpiar datos (reset total) o borrar sólo la partida actual.</p>
+            </div>
+          </div>
+          <div class="body grid">
+            <div class="dangerBox">
+              <strong>Precaución:</strong> estas acciones eliminan información guardada en IndexedDB. No hay “deshacer” para el borrado total.
+            </div>
+            <div class="row wrap">
+              <button class="btn danger" id="btnDeleteGame" disabled>🗑 Borrar partida actual</button>
+              <button class="btn danger" id="btnWipeAll">☠ Borrar TODO (reset)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottomnav">
+    <div class="tabs">
+      <button class="tab active" data-page="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>
+        </svg>
+        <span>Inicio</span>
+      </button>
+      <button class="tab" data-page="players">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="8.5" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span>Jugadores</span>
+      </button>
+      <button class="tab" data-page="bank">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <path d="M7 8h10M7 12h6M7 16h10"/>
+        </svg>
+        <span>Banco</span>
+      </button>
+      <button class="tab" data-page="props">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 21V9l9-6 9 6v12"/>
+          <path d="M9 22V12h6v10"/>
+        </svg>
+        <span>Propiedades</span>
+      </button>
+      <button class="tab" data-page="audit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 12h6"/>
+          <path d="M9 16h6"/>
+          <path d="M8 4h8l2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
+        </svg>
+        <span>Auditoría</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MODAL (reusable) -->
+  <div class="modal" id="modal">
+    <div class="sheet">
+      <div class="sheetHead">
+        <button class="iconbtn" id="modalClose" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+        <div style="flex:1">
+          <h2 id="modalTitle">Modal</h2>
+          <div class="subtitle" id="modalSub">—</div>
+        </div>
+        <button class="btn small ghost" id="modalHelp" style="display:none">Ayuda</button>
+      </div>
+      <div class="sheetBody" id="modalBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   BANCO VIRTUAL (QR) — Single-file HTML App
+   - Persistencia: IndexedDB
+   - QR: Generación y escaneo:
+       * Generación: QRCode minimal embebido (algoritmo simple de QR alfanumérico NO; usamos QR "fake" compatible con scanner? No).
+         => Aquí hacemos QR REAL con un encoder pequeño (incluido abajo).
+       * Escaneo: BarcodeDetector (si existe) o entrada manual.
+   - Modelo: game -> players -> properties -> transactions
+   - Undo: crea transacción inversa (auditable)
+   ============================================================ */
+
+(() => {
+  "use strict";
+
+  /* =========================
+     Utilidades
+  ========================= */
+  const $ = (sel, el=document) => el.querySelector(sel);
+  const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+  const fmtMoney = (n) => {
+    const x = Number(n||0);
+    return x.toLocaleString("es-MX", { style:"currency", currency:"MXN", maximumFractionDigits:0 });
+  };
+  const nowISO = () => new Date().toISOString();
+  const uid = () => "id_" + crypto.getRandomValues(new Uint32Array(4)).join("_");
+  const clampInt = (v, d=0) => {
+    const n = parseInt(String(v).replace(/[^\d-]/g,""), 10);
+    return Number.isFinite(n) ? n : d;
+  };
+  const sleep = (ms) => new Promise(r=>setTimeout(r,ms));
+
+  /* =========================
+     Datos del tablero (Monopoly clásico USA) — simplificado para banca
+     - Incluye grupos, precios y rentas base típicas (no pretende ser exacto para todas ediciones)
+     - Puedes editar aquí a tu gusto.
+  ========================= */
+  const BOARD = [
+    // group: "marron", "celeste", "rosa", "naranja", "rojo", "amarillo", "verde", "azul", "rail", "util", "other"
+    { key:"mediterranean", name:"Mediterranean Avenue", type:"street", group:"marron", price:60, houseCost:50, rent:[2,10,30,90,160,250] },
+    { key:"baltic", name:"Baltic Avenue", type:"street", group:"marron", price:60, houseCost:50, rent:[4,20,60,180,320,450] },
+
+    { key:"reading_rail", name:"Reading Railroad", type:"rail", group:"rail", price:200, rentRail:[25,50,100,200] },
+    { key:"oriental", name:"Oriental Avenue", type:"street", group:"celeste", price:100, houseCost:50, rent:[6,30,90,270,400,550] },
+    { key:"vermont", name:"Vermont Avenue", type:"street", group:"celeste", price:100, houseCost:50, rent:[6,30,90,270,400,550] },
+    { key:"connecticut", name:"Connecticut Avenue", type:"street", group:"celeste", price:120, houseCost:50, rent:[8,40,100,300,450,600] },
+
+    { key:"st_charles", name:"St. Charles Place", type:"street", group:"rosa", price:140, houseCost:100, rent:[10,50,150,450,625,750] },
+    { key:"electric", name:"Electric Company", type:"util", group:"util", price:150 },
+    { key:"states", name:"States Avenue", type:"street", group:"rosa", price:140, houseCost:100, rent:[10,50,150,450,625,750] },
+    { key:"virginia", name:"Virginia Avenue", type:"street", group:"rosa", price:160, houseCost:100, rent:[12,60,180,500,700,900] },
+
+    { key:"penn_rail", name:"Pennsylvania Railroad", type:"rail", group:"rail", price:200, rentRail:[25,50,100,200] },
+    { key:"st_james", name:"St. James Place", type:"street", group:"naranja", price:180, houseCost:100, rent:[14,70,200,550,750,950] },
+    { key:"tennessee", name:"Tennessee Avenue", type:"street", group:"naranja", price:180, houseCost:100, rent:[14,70,200,550,750,950] },
+    { key:"new_york", name:"New York Avenue", type:"street", group:"naranja", price:200, houseCost:100, rent:[16,80,220,600,800,1000] },
+
+    { key:"kentucky", name:"Kentucky Avenue", type:"street", group:"rojo", price:220, houseCost:150, rent:[18,90,250,700,875,1050] },
+    { key:"indiana", name:"Indiana Avenue", type:"street", group:"rojo", price:220, houseCost:150, rent:[18,90,250,700,875,1050] },
+    { key:"illinois", name:"Illinois Avenue", type:"street", group:"rojo", price:240, houseCost:150, rent:[20,100,300,750,925,1100] },
+
+    { key:"bno_rail", name:"B. & O. Railroad", type:"rail", group:"rail", price:200, rentRail:[25,50,100,200] },
+    { key:"atlantic", name:"Atlantic Avenue", type:"street", group:"amarillo", price:260, houseCost:150, rent:[22,110,330,800,975,1150] },
+    { key:"ventnor", name:"Ventnor Avenue", type:"street", group:"amarillo", price:260, houseCost:150, rent:[22,110,330,800,975,1150] },
+    { key:"water", name:"Water Works", type:"util", group:"util", price:150 },
+    { key:"marvin", name:"Marvin Gardens", type:"street", group:"amarillo", price:280, houseCost:150, rent:[24,120,360,850,1025,1200] },
+
+    { key:"pacific", name:"Pacific Avenue", type:"street", group:"verde", price:300, houseCost:200, rent:[26,130,390,900,1100,1275] },
+    { key:"north_carolina", name:"North Carolina Avenue", type:"street", group:"verde", price:300, houseCost:200, rent:[26,130,390,900,1100,1275] },
+    { key:"pennsylvania", name:"Pennsylvania Avenue", type:"street", group:"verde", price:320, houseCost:200, rent:[28,150,450,1000,1200,1400] },
+
+    { key:"short_rail", name:"Short Line", type:"rail", group:"rail", price:200, rentRail:[25,50,100,200] },
+    { key:"park", name:"Park Place", type:"street", group:"azul", price:350, houseCost:200, rent:[35,175,500,1100,1300,1500] },
+    { key:"boardwalk", name:"Boardwalk", type:"street", group:"azul", price:400, houseCost:200, rent:[50,200,600,1400,1700,2000] },
+  ];
+
+  const GROUPS = [
+    {key:"marron", name:"Marrón", count:2},
+    {key:"celeste", name:"Celeste", count:3},
+    {key:"rosa", name:"Rosa", count:3},
+    {key:"naranja", name:"Naranja", count:3},
+    {key:"rojo", name:"Rojo", count:3},
+    {key:"amarillo", name:"Amarillo", count:3},
+    {key:"verde", name:"Verde", count:3},
+    {key:"azul", name:"Azul", count:2},
+    {key:"rail", name:"Ferrocarriles", count:4},
+    {key:"util", name:"Servicios", count:2},
+  ];
+  const groupLabel = (g) => (GROUPS.find(x=>x.key===g)?.name) || g;
+
+  const DEFAULT_RULES = {
+    currency: "MXN",
+    startMoney: 1500,
+    passGo: 200,
+    jailFine: 50,
+    incomeTax: 200,
+    luxuryTax: 100,
+    lowBalanceAlert: 150,
+    allowUndo: true
+  };
+
+  /* =========================
+     IndexedDB (wrapper simple)
+  ========================= */
+  const DB_NAME = "monopoly_bank_qr";
+  const DB_VER = 1;
+
+  let db;
+
+  function idbOpen(){
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = (e) => {
+        const d = req.result;
+
+        if(!d.objectStoreNames.contains("games")){
+          const s = d.createObjectStore("games", { keyPath:"id" });
+          s.createIndex("active", "isActive", { unique:false });
+          s.createIndex("createdAt", "createdAt", { unique:false });
+        }
+        if(!d.objectStoreNames.contains("players")){
+          const s = d.createObjectStore("players", { keyPath:"id" });
+          s.createIndex("gameId", "gameId", { unique:false });
+          s.createIndex("code", "code", { unique:true });
+        }
+        if(!d.objectStoreNames.contains("properties")){
+          const s = d.createObjectStore("properties", { keyPath:"id" });
+          s.createIndex("gameId", "gameId", { unique:false });
+          s.createIndex("key", "key", { unique:false });
+          s.createIndex("ownerId", "ownerId", { unique:false });
+        }
+        if(!d.objectStoreNames.contains("transactions")){
+          const s = d.createObjectStore("transactions", { keyPath:"id" });
+          s.createIndex("gameId", "gameId", { unique:false });
+          s.createIndex("ts", "ts", { unique:false });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function tx(storeNames, mode="readonly"){
+    const t = db.transaction(storeNames, mode);
+    return { t, s: (name) => t.objectStore(name) };
+  }
+
+  function idbPut(store, value){
+    return new Promise((resolve, reject)=>{
+      const {t, s} = tx([store], "readwrite");
+      const req = s(store).put(value);
+      req.onsuccess = () => resolve(value);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function idbGet(store, key){
+    return new Promise((resolve, reject)=>{
+      const {t, s} = tx([store], "readonly");
+      const req = s(store).get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function idbDelete(store, key){
+    return new Promise((resolve, reject)=>{
+      const {t, s} = tx([store], "readwrite");
+      const req = s(store).delete(key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function idbGetAllByIndex(store, indexName, value){
+    return new Promise((resolve, reject)=>{
+      const {t, s} = tx([store], "readonly");
+      const idx = s(store).index(indexName);
+      const req = idx.getAll(value);
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function idbGetAll(store){
+    return new Promise((resolve, reject)=>{
+      const {t, s} = tx([store], "readonly");
+      const req = s(store).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function idbClear(store){
+    return new Promise((resolve, reject)=>{
+      const {t, s} = tx([store], "readwrite");
+      const req = s(store).clear();
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function wipeAll(){
+    if(db) db.close();
+    await new Promise((resolve, reject)=>{
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = resolve;
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => resolve(); // best effort
+    });
+    db = await idbOpen();
+  }
+
+  /* =========================
+     Estado UI / App
+  ========================= */
+  let state = {
+    activeGameId: null,
+    game: null,
+    players: [],
+    props: [],
+    txs: [],
+    bankMode: "credit"
+  };
+
+  function setPage(name){
+    $$(".page").forEach(p=>p.style.display="none");
+    $("#page-"+name).style.display="";
+    $$(".tab").forEach(t=>t.classList.toggle("active", t.dataset.page===name));
+  }
+
+  /* =========================
+     Modal helpers
+  ========================= */
+  const modal = $("#modal");
+  function openModal(title, sub, html){
+    $("#modalTitle").textContent = title || "Modal";
+    $("#modalSub").textContent = sub || "";
+    $("#modalBody").innerHTML = html || "";
+    modal.classList.add("show");
+  }
+  function closeModal(){
+    modal.classList.remove("show");
+    $("#modalBody").innerHTML = "";
+  }
+  $("#modalClose").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
+
+  /* =========================
+     Modelo / reglas
+  ========================= */
+  async function loadActiveGame(){
+    const games = await idbGetAll("games");
+    // prefer active
+    const active = games.find(g=>g.isActive) || null;
+    state.activeGameId = active?.id || null;
+    state.game = active;
+    if(active){
+      state.players = await idbGetAllByIndex("players","gameId", active.id);
+      state.props = await idbGetAllByIndex("properties","gameId", active.id);
+      state.txs = await idbGetAllByIndex("transactions","gameId", active.id);
+      state.txs.sort((a,b)=> (b.ts||"").localeCompare(a.ts||"")); // newest first
+    } else {
+      state.players = [];
+      state.props = [];
+      state.txs = [];
+    }
+  }
+
+  function gameRules(){
+    return Object.assign({}, DEFAULT_RULES, state.game?.rules || {});
+  }
+
+  function playerById(id){ return state.players.find(p=>p.id===id) || null; }
+  function propByKey(key){ return state.props.find(p=>p.key===key) || null; }
+  function propDef(key){ return BOARD.find(b=>b.key===key) || null; }
+
+  async function saveGame(g){
+    await idbPut("games", g);
+    state.game = g;
+    state.activeGameId = g.isActive ? g.id : null;
+  }
+
+  async function savePlayer(p){
+    await idbPut("players", p);
+    const idx = state.players.findIndex(x=>x.id===p.id);
+    if(idx>=0) state.players[idx]=p; else state.players.push(p);
+  }
+
+  async function saveProp(p){
+    await idbPut("properties", p);
+    const idx = state.props.findIndex(x=>x.id===p.id);
+    if(idx>=0) state.props[idx]=p; else state.props.push(p);
+  }
+
+  async function addTx(txObj){
+    await idbPut("transactions", txObj);
+    state.txs.unshift(txObj);
+  }
+
+  async function seedProperties(gameId){
+    for(const b of BOARD){
+      const p = {
+        id: uid(),
+        gameId,
+        key: b.key,
+        name: b.name,
+        type: b.type, // street/rail/util
+        group: b.group,
+        ownerId: null,
+        mortgaged: false,
+        houses: 0,      // 0..4
+        hotel: false
+      };
+      await saveProp(p);
+    }
+  }
+
+  function calcRent(prop){
+    const def = propDef(prop.key);
+    if(!def) return 0;
+    if(prop.mortgaged) return 0;
+    if(def.type === "street"){
+      if(prop.hotel) return def.rent[5] || 0;
+      const h = Math.max(0, Math.min(4, prop.houses || 0));
+      return def.rent[h] || def.rent[0] || 0;
+    }
+    if(def.type === "rail"){
+      // count rails owned by same owner
+      const ownerId = prop.ownerId;
+      const rails = state.props.filter(x=>x.type==="rail" && x.ownerId===ownerId);
+      const n = rails.length;
+      const idx = Math.max(1, Math.min(4, n)) - 1;
+      return def.rentRail?.[idx] || 25;
+    }
+    if(def.type === "util"){
+      // utilities: usually depends on dice (4x / 10x). We can handle via input multiplier.
+      // Here return 0 and ask in UI.
+      return 0;
+    }
+    return 0;
+  }
+
+  function hasMonopoly(ownerId, groupKey){
+    const g = GROUPS.find(x=>x.key===groupKey);
+    if(!g) return false;
+    // rails/util are special (no houses)
+    if(groupKey==="rail" || groupKey==="util") return false;
+    const inGroup = state.props.filter(p=>p.group===groupKey);
+    return inGroup.length === g.count && inGroup.every(p=>p.ownerId===ownerId && !p.mortgaged);
+  }
+
+  async function applyMoneyChange(playerId, delta, meta){
+    const p = playerById(playerId);
+    if(!p) throw new Error("Jugador no encontrado");
+    const before = p.balance;
+    p.balance = (p.balance||0) + delta;
+    p.updatedAt = nowISO();
+    await savePlayer(p);
+
+    // Low balance alert / bankrupcy flag
+    const rules = gameRules();
+    if(p.balance < 0){
+      p.isBankrupt = true;
+    } else if(p.isBankrupt && p.balance >= 0){
+      // if you "rescue" them, allow restore
+      p.isBankrupt = false;
+    }
+    if(p.balance <= rules.lowBalanceAlert && p.balance >= 0){
+      // just mark a flag for UI
+      p.low = true;
+    } else {
+      p.low = false;
+    }
+    await savePlayer(p);
+
+    const txObj = Object.assign({
+      id: uid(),
+      gameId: state.game.id,
+      ts: nowISO(),
+      kind: "money",
+      playerId,
+      delta,
+      before,
+      after: p.balance,
+      note: "",
+      tags: []
+    }, meta || {});
+    await addTx(txObj);
+    return txObj;
+  }
+
+  async function applyTransfer(fromId, toId, amount, note, tags=[]){
+    amount = Math.abs(clampInt(amount, 0));
+    if(amount<=0) throw new Error("Monto inválido");
+    if(fromId===toId) throw new Error("Origen y destino no pueden ser el mismo jugador");
+    const from = playerById(fromId), to = playerById(toId);
+    if(!from || !to) throw new Error("Jugador origen/destino inválido");
+
+    // debit
+    const txA = await applyMoneyChange(fromId, -amount, {
+      kind:"transfer",
+      peerId: toId,
+      note: note || "Transferencia",
+      tags
+    });
+    // credit
+    const txB = await applyMoneyChange(toId, +amount, {
+      kind:"transfer",
+      peerId: fromId,
+      note: note || "Transferencia",
+      tags
+    });
+    // link for undo
+    const link = uid();
+    txA.link = link; txB.link = link;
+    await idbPut("transactions", txA);
+    await idbPut("transactions", txB);
+    state.txs = state.txs.map(t => (t.id===txA.id?txA:(t.id===txB.id?txB:t)));
+    return [txA, txB];
+  }
+
+  async function setTurn(playerId){
+    const g = state.game;
+    g.currentTurnPlayerId = playerId || null;
+    g.updatedAt = nowISO();
+    await saveGame(g);
+  }
+
+  /* =========================
+     QR — Generación y Escaneo
+     - Escaneo: BarcodeDetector si existe
+     - Generación: encoder QR pequeño (MIT-like) embebido abajo
+  ========================= */
+
+  // ---- Minimal QR generator (adapted: tiny QRCode generator - best effort) ----
+  // Note: Para mantener todo en 1 archivo sin dependencias, usamos un encoder pequeño.
+  // Produce QR versión automática con corrección L, suficiente para "códigos de jugador".
+  // Si deseas más robustez, luego lo reemplazamos por un encoder más completo.
+  // Fuente conceptual: "QRCode" compact implementations (no external load).
+  // (Implementación simplificada: alfanumérico/byte -> byte)
+  function makeQRCanvas(text, size=180){
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    canvas.className = "qr";
+    // Generate matrix
+    const qr = QRCodeEncoder.encode(text);
+    const m = qr.modules;
+    const n = m.length;
+
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,size,size);
+
+    const pad = 8;
+    const cell = Math.floor((size - pad*2) / n);
+    const offset = Math.floor((size - cell*n)/2);
+
+    ctx.fillStyle = "#000";
+    for(let r=0;r<n;r++){
+      for(let c=0;c<n;c++){
+        if(m[r][c]){
+          ctx.fillRect(offset + c*cell, offset + r*cell, cell, cell);
+        }
+      }
+    }
+    return canvas;
+  }
+
+  async function scanWithCameraOnce(){
+    // returns decoded string or null
+    if(!("mediaDevices" in navigator) || !navigator.mediaDevices.getUserMedia){
+      throw new Error("El navegador no permite cámara.");
+    }
+    const hasBD = ("BarcodeDetector" in window);
+    if(!hasBD){
+      throw new Error("BarcodeDetector no está disponible en este navegador. Usa entrada manual.");
+    }
+
+    const detector = new BarcodeDetector({ formats:["qr_code"] });
+    let stream = null;
+    let stop = () => {};
+
+    return await new Promise((resolve, reject)=>{
+      const html = `
+        <div class="grid">
+          <div class="notice">
+            <strong>Escaneo QR:</strong> apunta la cámara al QR del jugador.
+            <div class="small">Si no detecta en 2–3 segundos, mejora iluminación o acerca el código.</div>
+          </div>
+          <video id="cam" autoplay playsinline></video>
+          <div class="row wrap">
+            <button class="btn ghost" id="btnStopCam">Cancelar</button>
+            <button class="btn" id="btnManual">Ingresar código manual</button>
+          </div>
+          <div class="helper">Compatibilidad: funciona en la mayoría de Chrome/Edge Android y escritorio reciente.</div>
+        </div>
+      `;
+      openModal("Escanear QR", "Selección rápida de jugador", html);
+
+      const video = $("#cam");
+      const btnStop = $("#btnStopCam");
+      const btnManual = $("#btnManual");
+
+      btnStop.onclick = () => { cleanup(); resolve(null); };
+      btnManual.onclick = () => {
+        cleanup();
+        resolve(prompt("Pega/ingresa el código del jugador (texto del QR):")?.trim() || null);
+      };
+
+      function cleanup(){
+        try{ if(stream) stream.getTracks().forEach(t=>t.stop()); }catch(_){}
+        closeModal();
+      }
+
+      navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }, audio:false })
+        .then(s => {
+          stream = s;
+          video.srcObject = s;
+
+          let active = true;
+          const loop = async () => {
+            if(!active) return;
+            try{
+              const barcodes = await detector.detect(video);
+              if(barcodes && barcodes.length){
+                const raw = (barcodes[0].rawValue || "").trim();
+                if(raw){
+                  active = false;
+                  cleanup();
+                  resolve(raw);
+                  return;
+                }
+              }
+            }catch(e){
+              // ignore detection errors
+            }
+            requestAnimationFrame(loop);
+          };
+          requestAnimationFrame(loop);
+
+          stop = () => { active=false; cleanup(); resolve(null); };
+        })
+        .catch(err=>{
+          closeModal();
+          reject(err);
+        });
+    });
+  }
+
+  async function pickPlayerFlow(title="Seleccionar jugador"){
+    // Try camera scan; fallback to list + manual
+    let code = null;
+    try{
+      code = await scanWithCameraOnce();
+    }catch(e){
+      // silent: fallback to list
+    }
+    if(code){
+      const p = state.players.find(x=>x.code===code);
+      if(p) return p;
+    }
+
+    // list picker
+    const items = state.players.map(p=>`
+      <div class="item" data-pick="${p.id}">
+        <span class="dot" style="background:${p.color||"#94a3b8"}"></span>
+        <div class="meta">
+          <div class="name">${escapeHtml(p.name)}</div>
+          <div class="sub">Saldo: ${fmtMoney(p.balance)} ${p.isBankrupt ? "• 🧨 Bancarrota" : (p.low ? "• ⚠️ Bajo" : "")}</div>
+        </div>
+        <button class="btn small ghost">Elegir</button>
+      </div>
+    `).join("");
+
+    openModal(title, "Toca un jugador (o pega un código)", `
+      <div class="grid">
+        <div class="row wrap">
+          <button class="btn" id="btnPasteCode">Ingresar código</button>
+          <button class="btn ghost" id="btnCancelPick">Cancelar</button>
+        </div>
+        <div class="list">${items || `<div class="notice">No hay jugadores aún.</div>`}</div>
+      </div>
+    `);
+
+    return await new Promise(resolve=>{
+      $("#btnCancelPick").onclick = () => { closeModal(); resolve(null); };
+      $("#btnPasteCode").onclick = () => {
+        const c = prompt("Pega/ingresa el código del jugador (texto del QR):")?.trim();
+        if(!c) return;
+        const p = state.players.find(x=>x.code===c);
+        closeModal();
+        resolve(p || null);
+      };
+      $$("#modalBody [data-pick]").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          const id = el.dataset.pick;
+          const p = playerById(id);
+          closeModal();
+          resolve(p);
+        });
+      });
+    });
+  }
+
+  /* =========================
+     UI Rendering
+  ========================= */
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function setHeader(){
+    const g = state.game;
+    if(!g){
+      $("#topSubtitle").textContent = "Sin partida activa";
+      $("#gameStateTag").textContent = "Sin partida";
+      $("#statusPill").textContent = "● Offline • IndexedDB";
+      return;
+    }
+    const paused = !!g.isPaused;
+    const ended = !!g.endedAt || !g.isActive;
+    $("#topSubtitle").textContent = `${g.name} • ${paused ? "Pausada" : (ended ? "Finalizada" : "Activa")}`;
+    $("#gameStateTag").textContent = paused ? "Pausada" : "Activa";
+    $("#statusPill").textContent = "● Guardado • IndexedDB";
+  }
+
+  function enableGameButtons(){
+    const has = !!state.game;
+    const ended = has ? (!state.game.isActive || !!state.game.endedAt) : true;
+    $("#btnResume").disabled = !has || ended || !state.game.isPaused;
+    $("#btnPause").disabled  = !has || ended || state.game.isPaused;
+    $("#btnEndGame").disabled = !has || ended;
+
+    $("#btnAddPlayer").disabled = !has || ended;
+    $("#btnQuickCredit").disabled = !has || ended;
+    $("#btnQuickPay").disabled = !has || ended;
+    $("#btnQuickTransfer").disabled = !has || ended;
+    $("#btnQuickRent").disabled = !has || ended;
+    $("#btnQuickBuyProp").disabled = !has || ended;
+    $("#btnQuickBuild").disabled = !has || ended;
+    $("#btnQuickJail").disabled = !has || ended;
+    $("#btnQuickCard").disabled = !has || ended;
+
+    $("#btnPropActions").disabled = !has || ended;
+    $("#btnExport").disabled = !has;
+    $("#btnDeleteGame").disabled = !has;
+
+    const rules = gameRules();
+    $("#btnUndo").disabled = !has || ended || !rules.allowUndo || state.txs.length===0;
+  }
+
+  function renderHome(){
+    const g = state.game;
+    const players = [...state.players].sort((a,b)=> (b.balance||0)-(a.balance||0));
+    $("#kpiPlayers").textContent = g ? String(players.length) : "—";
+    const turnName = g?.currentTurnPlayerId ? (playerById(g.currentTurnPlayerId)?.name || "—") : "—";
+    $("#kpiTurn").textContent = g ? turnName : "—";
+    $("#kpiTx").textContent = g ? String(state.txs.length) : "—";
+
+    const notice = $("#homeNotice");
+    if(g && !players.length){
+      notice.style.display="";
+      notice.textContent = "Crea jugadores para comenzar. Recomendado: agrega 2–6 jugadores y luego genera sus QR.";
+    } else {
+      notice.style.display="none";
+    }
+
+    const list = $("#homePlayersList");
+    list.innerHTML = players.length ? players.slice(0,10).map(p=>`
+      <div class="item" data-player="${p.id}">
+        <span class="dot" style="background:${p.color||"#94a3b8"}"></span>
+        <div class="meta">
+          <div class="name">${escapeHtml(p.name)} ${p.isBankrupt ? "• 🧨" : ""}</div>
+          <div class="sub">Saldo: ${fmtMoney(p.balance)} ${p.low ? "• ⚠️ bajo" : ""} ${p.inJail ? "• 🚔 cárcel" : ""}</div>
+        </div>
+        <button class="btn small ghost">Ver</button>
+      </div>
+    `).join("") : `<div class="notice">No hay jugadores aún.</div>`;
+
+    $$("#homePlayersList [data-player]").forEach(el=>{
+      el.onclick = () => showPlayerDetails(el.dataset.player);
+    });
+  }
+
+  function renderPlayers(){
+    const list = $("#playersList");
+    const players = [...state.players].sort((a,b)=> (a.order||0)-(b.order||0));
+    list.innerHTML = players.length ? players.map(p=>`
+      <div class="item" data-player="${p.id}">
+        <span class="dot" style="background:${p.color||"#94a3b8"}"></span>
+        <div class="meta">
+          <div class="name">${escapeHtml(p.name)} ${p.isBankrupt ? "• 🧨" : ""}</div>
+          <div class="sub">
+            Saldo: ${fmtMoney(p.balance)} · ${p.inJail ? "🚔 En cárcel" : "Libre"} · Código: <span class="mono">${escapeHtml(p.code)}</span>
+          </div>
+        </div>
+        <button class="btn small ghost">Abrir</button>
+      </div>
+    `).join("") : `<div class="notice">Agrega jugadores desde el botón “Agregar”.</div>`;
+
+    $$("#playersList [data-player]").forEach(el=>{
+      el.onclick = () => showPlayerDetails(el.dataset.player);
+    });
+  }
+
+  function renderProps(){
+    const filter = ($("#propFilter").value||"").trim().toLowerCase();
+    const list = $("#propsList");
+
+    let items = [...state.props];
+    if(filter){
+      items = items.filter(p=>{
+        const def = propDef(p.key);
+        const owner = p.ownerId ? playerById(p.ownerId)?.name || "" : "";
+        const hay = [
+          p.name, p.type, p.group, groupLabel(p.group),
+          owner, String(def?.price||""), String(calcRent(p))
+        ].join(" ").toLowerCase();
+        return hay.includes(filter);
+      });
+    }
+
+    // sort: owned first, then group/name
+    items.sort((a,b)=>{
+      const ao = a.ownerId ? 0 : 1;
+      const bo = b.ownerId ? 0 : 1;
+      if(ao!==bo) return ao-bo;
+      return (a.group||"").localeCompare(b.group||"") || (a.name||"").localeCompare(b.name||"");
+    });
+
+    list.innerHTML = items.length ? items.map(p=>{
+      const def = propDef(p.key);
+      const owner = p.ownerId ? playerById(p.ownerId) : null;
+      const rent = (p.type==="util") ? "dep. dados" : fmtMoney(calcRent(p));
+      const status = p.mortgaged ? "• 🧾 Hipotecada" : (p.hotel ? "• 🏨 Hotel" : (p.houses ? `• 🏠 x${p.houses}` : ""));
+      return `
+        <div class="item" data-prop="${p.id}">
+          <span class="dot" style="background:${owner?.color||"#334155"}"></span>
+          <div class="meta">
+            <div class="name">${escapeHtml(p.name)}</div>
+            <div class="sub">
+              ${groupLabel(p.group)} · Precio: ${fmtMoney(def?.price||0)} · Renta: ${rent}
+              ${owner ? ` · Dueño: ${escapeHtml(owner.name)}` : " · Sin dueño"}
+              ${status ? ` ${status}` : ""}
+            </div>
+          </div>
+          <button class="btn small ghost">Ver</button>
+        </div>
+      `;
+    }).join("") : `<div class="notice">Sin propiedades (o no coincide el filtro).</div>`;
+
+    $$("#propsList [data-prop]").forEach(el=>{
+      el.onclick = () => showPropDetails(el.dataset.prop);
+    });
+  }
+
+  function renderAudit(){
+    $("#auditCount").textContent = state.txs.length ? String(state.txs.length) : "0";
+    $("#auditLast").textContent = state.txs[0]?.ts ? new Date(state.txs[0].ts).toLocaleString("es-MX") : "—";
+
+    const list = $("#auditList");
+    const txs = state.txs.slice(0,80);
+    list.innerHTML = txs.length ? txs.map(t=>{
+      const p = t.playerId ? playerById(t.playerId) : null;
+      const peer = t.peerId ? playerById(t.peerId) : null;
+      const delta = (t.delta!=null) ? (t.delta>=0?`+${fmtMoney(t.delta)}`:`−${fmtMoney(Math.abs(t.delta))}`) : "";
+      const title = t.kind==="transfer"
+        ? `Transferencia ${p?escapeHtml(p.name):"?"} → ${peer?escapeHtml(peer.name):"?"}`
+        : (t.kind==="rent" ? "Pago de renta"
+        : t.kind==="property" ? "Acción de propiedad"
+        : t.kind==="card" ? "Carta"
+        : t.kind==="jail" ? "Cárcel"
+        : t.kind==="system" ? "Sistema" : "Movimiento");
+
+      const sub = [
+        t.note ? escapeHtml(t.note) : "",
+        t.propKey ? `Prop: ${escapeHtml(propDef(t.propKey)?.name || t.propKey)}` : "",
+        delta ? `Δ ${delta}` : "",
+        t.ts ? new Date(t.ts).toLocaleString("es-MX") : ""
+      ].filter(Boolean).join(" · ");
+
+      return `
+        <div class="item" data-tx="${t.id}">
+          <div class="meta">
+            <div class="name">${title}</div>
+            <div class="sub">${sub}</div>
+          </div>
+          <button class="btn small ghost">Detalle</button>
+        </div>
+      `;
+    }).join("") : `<div class="notice">Sin movimientos aún.</div>`;
+
+    $$("#auditList [data-tx]").forEach(el=>{
+      el.onclick = () => showTxDetails(el.dataset.tx);
+    });
+  }
+
+  function renderBank(){
+    const mode = state.bankMode;
+    const rules = gameRules();
+    const disabled = !state.game || !state.game.isActive || !!state.game.endedAt || state.game.isPaused;
+
+    const commonPlayerPick = `
+      <div class="row wrap">
+        <button class="btn" id="pickPlayer">👤 Seleccionar por QR / lista</button>
+        <span class="chip">Seleccionado: <strong id="pickedName">—</strong></span>
+      </div>
+      <input type="hidden" id="pickedId" />
+    `;
+
+    const creditForm = `
+      <div class="form">
+        ${commonPlayerPick}
+        <div class="field">
+          <label>Monto a cobrar del banco</label>
+          <input id="amt" inputmode="numeric" placeholder="Ej: 200" />
+          <div class="helper">Ejemplos: pasar por GO (${fmtMoney(rules.passGo)}), premio, devolución.</div>
+        </div>
+        <div class="field">
+          <label>Concepto (nota)</label>
+          <input id="note" placeholder="Ej: Pasó por GO" />
+        </div>
+        <button class="btn good full" id="doCredit" ${disabled?"disabled":""}>Aplicar cobro</button>
+      </div>
+    `;
+
+    const payForm = `
+      <div class="form">
+        ${commonPlayerPick}
+        <div class="field">
+          <label>Monto a pagar al banco</label>
+          <input id="amt" inputmode="numeric" placeholder="Ej: 200" />
+          <div class="helper">Ejemplos: impuestos, multas, compras, salida de cárcel, etc.</div>
+        </div>
+        <div class="field">
+          <label>Concepto (nota)</label>
+          <input id="note" placeholder="Ej: Impuesto" />
+        </div>
+        <button class="btn full primary" id="doPay" ${disabled?"disabled":""}>Aplicar pago</button>
+      </div>
+    `;
+
+    const transferForm = `
+      <div class="form">
+        <div class="row wrap">
+          <button class="btn" id="pickFrom">📤 Origen (QR/lista)</button>
+          <span class="chip">Origen: <strong id="fromName">—</strong></span>
+        </div>
+        <input type="hidden" id="fromId" />
+        <div class="row wrap">
+          <button class="btn" id="pickTo">📥 Destino (QR/lista)</button>
+          <span class="chip">Destino: <strong id="toName">—</strong></span>
+        </div>
+        <input type="hidden" id="toId" />
+        <div class="field">
+          <label>Monto</label>
+          <input id="amt" inputmode="numeric" placeholder="Ej: 50" />
+        </div>
+        <div class="field">
+          <label>Concepto (nota)</label>
+          <input id="note" placeholder="Ej: Pago entre jugadores" />
+        </div>
+        <button class="btn full primary" id="doTransfer" ${disabled?"disabled":""}>Transferir</button>
+      </div>
+    `;
+
+    const rentForm = `
+      <div class="form">
+        <div class="row wrap">
+          <button class="btn" id="pickPayer">👤 Jugador que paga (QR/lista)</button>
+          <span class="chip">Paga: <strong id="payerName">—</strong></span>
+        </div>
+        <input type="hidden" id="payerId" />
+        <div class="field">
+          <label>Propiedad</label>
+          <select id="propKey">
+            <option value="">— Seleccionar —</option>
+            ${state.props.map(p=>{
+              const owner = p.ownerId ? playerById(p.ownerId)?.name : null;
+              return `<option value="${p.key}">${escapeHtml(p.name)} ${owner ? `· Dueño: ${escapeHtml(owner)}` : "· Sin dueño"}</option>`;
+            }).join("")}
+          </select>
+          <div class="helper">La renta se calcula por estado (casas/hotel/hipoteca). Para servicios, te pedirá el monto.</div>
+        </div>
+        <div class="field" id="rentManualWrap" style="display:none">
+          <label>Monto de renta (servicios / manual)</label>
+          <input id="rentManual" inputmode="numeric" placeholder="Ej: 120" />
+        </div>
+        <div class="field">
+          <label>Nota</label>
+          <input id="note" placeholder="Ej: Cayó en propiedad" />
+        </div>
+        <button class="btn full primary" id="doRent" ${disabled?"disabled":""}>Pagar renta</button>
+        <div class="helper">Si la propiedad no tiene dueño o está hipotecada, no se cobra.</div>
+      </div>
+    `;
+
+    $("#bankForms").innerHTML =
+      mode==="credit" ? creditForm :
+      mode==="pay" ? payForm :
+      mode==="transfer" ? transferForm :
+      rentForm;
+
+    // Wire events
+    if(mode==="credit" || mode==="pay"){
+      $("#pickPlayer").onclick = async ()=>{
+        const p = await pickPlayerFlow("Seleccionar jugador");
+        if(!p) return;
+        $("#pickedId").value = p.id;
+        $("#pickedName").textContent = p.name;
+      };
+      const actionBtn = mode==="credit" ? $("#doCredit") : $("#doPay");
+      actionBtn.onclick = async ()=>{
+        try{
+          const id = $("#pickedId").value;
+          if(!id) return toast("Selecciona un jugador.");
+          const amt = clampInt($("#amt").value, 0);
+          if(amt<=0) return toast("Monto inválido.");
+          const note = ($("#note").value||"").trim() || (mode==="credit"?"Cobro del banco":"Pago al banco");
+          const delta = mode==="credit" ? +amt : -amt;
+          const kind = mode==="credit" ? "money" : "money";
+          await applyMoneyChange(id, delta, { kind, note, tags:[mode==="credit"?"bank_credit":"bank_pay"] });
+          await refreshAll();
+          toast("Listo ✅");
+        }catch(e){
+          toast("Error: " + e.message);
+        }
+      };
+    }
+
+    if(mode==="transfer"){
+      $("#pickFrom").onclick = async ()=>{
+        const p = await pickPlayerFlow("Origen");
+        if(!p) return;
+        $("#fromId").value = p.id; $("#fromName").textContent = p.name;
+      };
+      $("#pickTo").onclick = async ()=>{
+        const p = await pickPlayerFlow("Destino");
+        if(!p) return;
+        $("#toId").value = p.id; $("#toName").textContent = p.name;
+      };
+      $("#doTransfer").onclick = async ()=>{
+        try{
+          const fromId = $("#fromId").value;
+          const toId = $("#toId").value;
+          if(!fromId || !toId) return toast("Selecciona origen y destino.");
+          const amt = clampInt($("#amt").value, 0);
+          const note = ($("#note").value||"").trim() || "Transferencia";
+          await applyTransfer(fromId, toId, amt, note, ["transfer"]);
+          await refreshAll();
+          toast("Transferencia hecha ✅");
+        }catch(e){
+          toast("Error: " + e.message);
+        }
+      };
+    }
+
+    if(mode==="rent"){
+      $("#pickPayer").onclick = async ()=>{
+        const p = await pickPlayerFlow("Jugador que paga");
+        if(!p) return;
+        $("#payerId").value = p.id; $("#payerName").textContent = p.name;
+      };
+      $("#propKey").onchange = ()=>{
+        const key = $("#propKey").value;
+        const prop = state.props.find(x=>x.key===key);
+        if(!prop) { $("#rentManualWrap").style.display="none"; return; }
+        $("#rentManualWrap").style.display = (prop.type==="util") ? "" : "none";
+      };
+      $("#doRent").onclick = async ()=>{
+        try{
+          const payerId = $("#payerId").value;
+          if(!payerId) return toast("Selecciona quién paga.");
+          const key = $("#propKey").value;
+          if(!key) return toast("Selecciona una propiedad.");
+          const prop = state.props.find(x=>x.key===key);
+          if(!prop) return toast("Propiedad inválida.");
+          if(!prop.ownerId) return toast("Esa propiedad no tiene dueño. No se cobra renta.");
+          if(prop.mortgaged) return toast("Propiedad hipotecada. No se cobra renta.");
+          const ownerId = prop.ownerId;
+          if(ownerId === payerId) return toast("El jugador es dueño. No se cobra.");
+
+          let rent = 0;
+          if(prop.type==="util"){
+            rent = clampInt($("#rentManual").value, 0);
+            if(rent<=0) return toast("Para servicios, ingresa la renta manual.");
+          } else {
+            rent = calcRent(prop);
+            if(rent<=0) return toast("Renta calculada es 0 (revisa hipoteca/estado).");
+          }
+
+          const note = ($("#note").value||"").trim() || `Renta: ${prop.name}`;
+          // Payer -> Owner
+          await applyTransfer(payerId, ownerId, rent, note, ["rent"]);
+          // add a marker tx for audit context
+          const mark = {
+            id: uid(),
+            gameId: state.game.id,
+            ts: nowISO(),
+            kind: "rent",
+            playerId: payerId,
+            peerId: ownerId,
+            delta: -rent,
+            note,
+            propKey: prop.key,
+            tags:["rent","context"]
+          };
+          await addTx(mark);
+
+          await refreshAll();
+          toast("Renta pagada ✅");
+        }catch(e){
+          toast("Error: " + e.message);
+        }
+      };
+    }
+
+    // Undo
+    $("#btnUndo").onclick = async ()=>{
+      try{
+        if(!state.txs.length) return;
+        const last = state.txs[0];
+        // if linked transfer, undo both sides
+        if(last.link){
+          const linked = state.txs.filter(t=>t.link===last.link);
+          // Determine unique pair - reverse each delta
+          for(const t of linked){
+            if(t.playerId && Number.isFinite(t.delta)){
+              await applyMoneyChange(t.playerId, -t.delta, { kind:"system", note:"UNDO: " + (t.note||t.kind), tags:["undo"], undoOf: t.id });
+            }
+          }
+        } else if(last.playerId && Number.isFinite(last.delta)){
+          await applyMoneyChange(last.playerId, -last.delta, { kind:"system", note:"UNDO: " + (last.note||last.kind), tags:["undo"], undoOf: last.id });
+        } else {
+          return toast("No se puede deshacer esta acción.");
+        }
+        await refreshAll();
+        toast("Deshecho ✅");
+      }catch(e){
+        toast("Error: " + e.message);
+      }
+    };
+  }
+
+  /* =========================
+     Player details (QR + acciones)
+  ========================= */
+  async function showPlayerDetails(playerId){
+    const p = playerById(playerId);
+    if(!p) return;
+    const propsOwned = state.props.filter(x=>x.ownerId===p.id);
+    const mort = propsOwned.filter(x=>x.mortgaged).length;
+    const streets = propsOwned.filter(x=>x.type==="street").length;
+    const rails = propsOwned.filter(x=>x.type==="rail").length;
+    const utils = propsOwned.filter(x=>x.type==="util").length;
+
+    const qrCanvas = makeQRCanvas(p.code, 180);
+    const propsHtml = propsOwned.length ? propsOwned.slice(0,12).map(pr=>{
+      const def = propDef(pr.key);
+      const r = pr.type==="util" ? "dep. dados" : fmtMoney(calcRent(pr));
+      const st = pr.mortgaged ? "🧾 hipotecada" : (pr.hotel ? "🏨 hotel" : (pr.houses ? `🏠 x${pr.houses}` : "—"));
+      return `<div class="item" style="padding:10px">
+        <div class="meta">
+          <div class="name">${escapeHtml(pr.name)}</div>
+          <div class="sub">${groupLabel(pr.group)} · Renta: ${r} · Estado: ${st}</div>
+        </div>
+      </div>`;
+    }).join("") : `<div class="notice">No tiene propiedades.</div>`;
+
+    openModal(`Jugador: ${p.name}`, `Saldo ${fmtMoney(p.balance)} · Código QR abajo`, `
+      <div class="grid">
+        <div class="qrWrap">
+          <div>
+            <div class="pill2">
+              <div class="helper">Este QR identifica al jugador (la app lo escanea para operar).</div>
+              <div class="divider"></div>
+              <div class="mono small">Código: ${escapeHtml(p.code)}</div>
+            </div>
+          </div>
+          <div id="qrMount"></div>
+        </div>
+
+        <div class="row wrap">
+          <span class="chip">🏠 <strong>${streets}</strong> calles</span>
+          <span class="chip">🚆 <strong>${rails}</strong> rails</span>
+          <span class="chip">💡 <strong>${utils}</strong> servicios</span>
+          <span class="chip">🧾 <strong>${mort}</strong> hipotecadas</span>
+          <span class="chip">🚔 <strong>${p.inJail ? "Sí" : "No"}</strong> cárcel</span>
+          <span class="chip">🧨 <strong>${p.isBankrupt ? "Sí" : "No"}</strong> bancarrota</span>
+        </div>
+
+        <div class="row wrap">
+          <button class="btn good" id="btnCredit">+ Cobrar</button>
+          <button class="btn" id="btnPay">− Pagar</button>
+          <button class="btn" id="btnTurn">🎲 Poner como turno</button>
+          <button class="btn danger" id="btnBankrupt">🧨 Bancarrota</button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="card" style="box-shadow:none">
+          <div class="head">
+            <div style="flex:1"><h3>Propiedades (vista rápida)</h3><p>Para gestión completa, usa la pestaña Propiedades.</p></div>
+          </div>
+          <div class="body">${propsHtml}</div>
+        </div>
+      </div>
+    `);
+
+    $("#qrMount").appendChild(qrCanvas);
+
+    $("#btnCredit").onclick = ()=> { closeModal(); openBankPrefilled("credit", p.id); };
+    $("#btnPay").onclick = ()=> { closeModal(); openBankPrefilled("pay", p.id); };
+    $("#btnTurn").onclick = async ()=>{
+      await setTurn(p.id);
+      await refreshAll();
+      toast("Turno actualizado ✅");
+      closeModal();
+    };
+    $("#btnBankrupt").onclick = ()=> { closeModal(); openBankruptcyFlow(p.id); };
+  }
+
+  function openBankPrefilled(mode, playerId){
+    // switch to bank page, set mode, and prefill player via modal
+    setPage("bank");
+    setBankMode(mode);
+    // Prefill on next tick
+    setTimeout(()=>{
+      if(mode==="credit" || mode==="pay"){
+        $("#pickedId").value = playerId;
+        $("#pickedName").textContent = playerById(playerId)?.name || "—";
+      }
+    }, 0);
+  }
+
+  /* =========================
+     Property details + actions
+  ========================= */
+  async function showPropDetails(propId){
+    const prop = state.props.find(x=>x.id===propId);
+    if(!prop) return;
+    const def = propDef(prop.key);
+    const owner = prop.ownerId ? playerById(prop.ownerId) : null;
+    const rent = prop.type==="util" ? "dep. dados" : fmtMoney(calcRent(prop));
+    const monopoly = owner ? hasMonopoly(owner.id, prop.group) : false;
+
+    openModal(`Propiedad`, `${prop.name} · ${groupLabel(prop.group)}`, `
+      <div class="grid">
+        <div class="pill2">
+          <div class="row wrap">
+            <span class="chip">Precio: <strong>${fmtMoney(def?.price||0)}</strong></span>
+            <span class="chip">Renta: <strong>${rent}</strong></span>
+            <span class="chip">Dueño: <strong>${owner ? escapeHtml(owner.name) : "Nadie"}</strong></span>
+            <span class="chip">Hipoteca: <strong>${prop.mortgaged ? "Sí" : "No"}</strong></span>
+            ${prop.type==="street" ? `<span class="chip">Casas: <strong>${prop.houses||0}</strong></span><span class="chip">Hotel: <strong>${prop.hotel?"Sí":"No"}</strong></span>` : ""}
+            ${monopoly ? `<span class="chip">Monopolio: <strong>Sí</strong></span>` : ""}
+          </div>
+          <div class="helper" style="margin-top:8px">
+            Nota: Para servicios (utilities) la renta depende de dados; aquí se gestiona de forma manual al cobrar.
+          </div>
+        </div>
+
+        <div class="row wrap">
+          <button class="btn primary" id="btnBuyProp">🏠 Comprar</button>
+          <button class="btn" id="btnSellBank">💸 Vender al banco</button>
+          <button class="btn" id="btnMortgage">🧾 Hipotecar / Deshipotecar</button>
+          ${prop.type==="street" ? `<button class="btn" id="btnBuild">🏗️ Casas/Hotel</button>` : ""}
+        </div>
+
+        <div class="dangerBox">
+          <strong>Importante:</strong> esta app actúa como banco. No mueve la ficha. Tú decides cuándo ejecutar cada acción.
+        </div>
+      </div>
+    `);
+
+    $("#btnBuyProp").onclick = async ()=>{
+      try{
+        if(prop.ownerId) return toast("Ya tiene dueño.");
+        const buyer = await pickPlayerFlow("Comprador");
+        if(!buyer) return;
+        const price = def?.price || 0;
+        if(price<=0) return toast("Precio inválido.");
+        // charge buyer
+        await applyMoneyChange(buyer.id, -price, { kind:"property", note:`Compra: ${prop.name}`, propKey:prop.key, tags:["buy_property"] });
+        // set owner
+        prop.ownerId = buyer.id;
+        prop.mortgaged = false;
+        prop.houses = 0; prop.hotel = false;
+        await saveProp(prop);
+        // audit
+        await addTx({ id:uid(), gameId: state.game.id, ts:nowISO(), kind:"property", playerId:buyer.id, delta:-price, note:`Compra propiedad`, propKey:prop.key, tags:["property"] });
+        await refreshAll();
+        toast("Comprada ✅");
+        closeModal();
+      }catch(e){ toast("Error: "+e.message); }
+    };
+
+    $("#btnSellBank").onclick = async ()=>{
+      try{
+        if(!prop.ownerId) return toast("No tiene dueño.");
+        const ownerId = prop.ownerId;
+        const price = def?.price || 0;
+        const sellValue = Math.floor(price/2);
+        // clear improvements
+        prop.houses = 0; prop.hotel = false;
+        prop.mortgaged = false;
+        prop.ownerId = null;
+        await saveProp(prop);
+        await applyMoneyChange(ownerId, +sellValue, { kind:"property", note:`Venta al banco: ${prop.name}`, propKey:prop.key, tags:["sell_bank"] });
+        await refreshAll();
+        toast("Vendida al banco ✅");
+        closeModal();
+      }catch(e){ toast("Error: "+e.message); }
+    };
+
+    $("#btnMortgage").onclick = async ()=>{
+      try{
+        if(!prop.ownerId) return toast("No tiene dueño.");
+        const ownerId = prop.ownerId;
+        const price = def?.price || 0;
+        const mortgageValue = Math.floor(price/2);
+        if(!prop.mortgaged){
+          // Mortgage: pay owner mortgage value
+          prop.mortgaged = true;
+          // if has houses/hotel, you should sell first
+          if(prop.hotel || (prop.houses||0)>0){
+            return toast("Vende casas/hotel antes de hipotecar.");
+          }
+          await saveProp(prop);
+          await applyMoneyChange(ownerId, +mortgageValue, { kind:"property", note:`Hipoteca: ${prop.name}`, propKey:prop.key, tags:["mortgage"] });
+          await refreshAll();
+          toast("Hipotecada ✅");
+        } else {
+          // Unmortgage: pay back mortgage value (+10% fee typical). We'll do +10%.
+          const fee = Math.ceil(mortgageValue * 1.10);
+          await applyMoneyChange(ownerId, -fee, { kind:"property", note:`Deshipoteca: ${prop.name}`, propKey:prop.key, tags:["unmortgage"] });
+          prop.mortgaged = false;
+          await saveProp(prop);
+          await refreshAll();
+          toast("Deshipotecada ✅");
+        }
+        closeModal();
+      }catch(e){ toast("Error: "+e.message); }
+    };
+
+    const buildBtn = $("#btnBuild");
+    if(buildBtn){
+      buildBtn.onclick = async ()=>{
+        try{
+          if(!prop.ownerId) return toast("No tiene dueño.");
+          const ownerId = prop.ownerId;
+          if(!hasMonopoly(ownerId, prop.group)) return toast("Requiere monopolio del color (sin hipotecas).");
+          const hc = def?.houseCost || 0;
+          if(hc<=0) return toast("Costo de casa inválido.");
+
+          openModal("Construcción", `${prop.name} · Costo casa: ${fmtMoney(hc)}`, `
+            <div class="grid">
+              <div class="pill2">
+                <div class="row wrap">
+                  <span class="chip">Casas actuales: <strong>${prop.houses||0}</strong></span>
+                  <span class="chip">Hotel: <strong>${prop.hotel?"Sí":"No"}</strong></span>
+                </div>
+                <div class="helper" style="margin-top:8px">
+                  Regla rápida: 0–4 casas y luego hotel. (Balance de construcción por color se omite en esta versión; se puede añadir.)
+                </div>
+              </div>
+
+              <div class="row wrap">
+                <button class="btn" id="buyHouse">+ Casa</button>
+                <button class="btn" id="sellHouse">− Casa</button>
+                <button class="btn" id="buyHotel">🏨 Comprar hotel</button>
+                <button class="btn" id="sellHotel">🧯 Vender hotel</button>
+              </div>
+
+              <div class="notice">
+                <strong>Nota:</strong> el banco descuenta/abona automáticamente, y la renta cambia según casas/hotel.
+              </div>
+            </div>
+          `);
+
+          $("#buyHouse").onclick = async ()=>{
+            if(prop.hotel) return toast("Ya hay hotel.");
+            if((prop.houses||0) >= 4) return toast("Máximo 4 casas (luego hotel).");
+            await applyMoneyChange(ownerId, -hc, { kind:"property", note:`Compra casa: ${prop.name}`, propKey:prop.key, tags:["buy_house"] });
+            prop.houses = (prop.houses||0)+1;
+            await saveProp(prop);
+            await refreshAll();
+            toast("Casa añadida ✅");
+            closeModal();
+          };
+          $("#sellHouse").onclick = async ()=>{
+            if(prop.hotel) return toast("Vende el hotel primero.");
+            if((prop.houses||0) <= 0) return toast("No hay casas.");
+            const sellVal = Math.floor(hc/2);
+            await applyMoneyChange(ownerId, +sellVal, { kind:"property", note:`Venta casa: ${prop.name}`, propKey:prop.key, tags:["sell_house"] });
+            prop.houses = (prop.houses||0)-1;
+            await saveProp(prop);
+            await refreshAll();
+            toast("Casa vendida ✅");
+            closeModal();
+          };
+          $("#buyHotel").onclick = async ()=>{
+            if(prop.hotel) return toast("Ya hay hotel.");
+            if((prop.houses||0) < 4) return toast("Necesitas 4 casas primero.");
+            // Typical: swap 4 houses for hotel, pay one houseCost
+            await applyMoneyChange(ownerId, -hc, { kind:"property", note:`Compra hotel: ${prop.name}`, propKey:prop.key, tags:["buy_hotel"] });
+            prop.houses = 0; prop.hotel = true;
+            await saveProp(prop);
+            await refreshAll();
+            toast("Hotel comprado ✅");
+            closeModal();
+          };
+          $("#sellHotel").onclick = async ()=>{
+            if(!prop.hotel) return toast("No hay hotel.");
+            const sellVal = Math.floor(hc/2);
+            await applyMoneyChange(ownerId, +sellVal, { kind:"property", note:`Venta hotel: ${prop.name}`, propKey:prop.key, tags:["sell_hotel"] });
+            prop.hotel = false;
+            await saveProp(prop);
+            await refreshAll();
+            toast("Hotel vendido ✅");
+            closeModal();
+          };
+
+        }catch(e){ toast("Error: "+e.message); }
+      };
+    }
+  }
+
+  /* =========================
+     Bankruptcy flow (escenarios)
+     - Declarar bancarrota
+     - Transferir activos a acreedor o al banco
+  ========================= */
+  async function openBankruptcyFlow(playerId){
+    const p = playerById(playerId);
+    if(!p) return;
+
+    openModal("Bancarrota", `${p.name} · decide destino de activos`, `
+      <div class="grid">
+        <div class="dangerBox">
+          <strong>Esto marca al jugador como “bancarrota”</strong> y liquida sus activos según el escenario.
+          <div class="small">En Monopoly real: al jugador acreedor o al banco si no hay acreedor.</div>
+        </div>
+
+        <div class="row wrap">
+          <button class="btn" id="toBank">📦 Al banco (liberar propiedades)</button>
+          <button class="btn primary" id="toPlayer">🤝 A otro jugador (acreedor)</button>
+          <button class="btn ghost" id="cancelB">Cancelar</button>
+        </div>
+      </div>
+    `);
+
+    $("#cancelB").onclick = ()=>closeModal();
+
+    $("#toBank").onclick = async ()=>{
+      try{
+        // Release all properties
+        const owned = state.props.filter(pr=>pr.ownerId===p.id);
+        for(const pr of owned){
+          pr.ownerId = null;
+          pr.mortgaged = false;
+          pr.houses = 0;
+          pr.hotel = false;
+          await saveProp(pr);
+        }
+        p.isBankrupt = true;
+        p.balance = p.balance || 0;
+        await savePlayer(p);
+        await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"system", playerId:p.id, note:"Bancarrota -> activos al banco", tags:["bankruptcy"] });
+        await refreshAll();
+        toast("Bancarrota aplicada ✅");
+        closeModal();
+      }catch(e){ toast("Error: "+e.message); }
+    };
+
+    $("#toPlayer").onclick = async ()=>{
+      try{
+        const creditor = await pickPlayerFlow("Seleccionar acreedor");
+        if(!creditor) return;
+        if(creditor.id === p.id) return toast("No puede ser el mismo jugador.");
+
+        const owned = state.props.filter(pr=>pr.ownerId===p.id);
+        for(const pr of owned){
+          pr.ownerId = creditor.id;
+          // keep mortgaged state as-is (Monopoly rules vary); we keep mortgaged and improvements removed
+          pr.houses = 0;
+          pr.hotel = false;
+          await saveProp(pr);
+        }
+        // Optionally transfer remaining money if positive
+        const remaining = Math.max(0, p.balance||0);
+        if(remaining>0){
+          await applyTransfer(p.id, creditor.id, remaining, "Bancarrota: transferencia de saldo restante", ["bankruptcy"]);
+        }
+        p.isBankrupt = true;
+        p.balance = 0;
+        await savePlayer(p);
+        await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"system", playerId:p.id, peerId:creditor.id, note:"Bancarrota -> activos al acreedor", tags:["bankruptcy"] });
+        await refreshAll();
+        toast("Bancarrota aplicada ✅");
+        closeModal();
+      }catch(e){ toast("Error: "+e.message); }
+    };
+  }
+
+  /* =========================
+     Transaction details
+  ========================= */
+  function showTxDetails(txId){
+    const t = state.txs.find(x=>x.id===txId);
+    if(!t) return;
+    const p = t.playerId ? playerById(t.playerId) : null;
+    const peer = t.peerId ? playerById(t.peerId) : null;
+    const lines = [
+      ["ID", t.id],
+      ["Fecha", t.ts ? new Date(t.ts).toLocaleString("es-MX") : "—"],
+      ["Tipo", t.kind],
+      ["Jugador", p ? p.name : "—"],
+      ["Contra", peer ? peer.name : "—"],
+      ["Delta", (t.delta!=null) ? (t.delta>=0?`+${fmtMoney(t.delta)}`:`−${fmtMoney(Math.abs(t.delta))}`) : "—"],
+      ["Propiedad", t.propKey ? (propDef(t.propKey)?.name || t.propKey) : "—"],
+      ["Nota", t.note || "—"],
+      ["Tags", (t.tags||[]).join(", ") || "—"],
+      ["Link", t.link || "—"],
+      ["UndoOf", t.undoOf || "—"]
+    ];
+    openModal("Detalle de movimiento", "", `
+      <div class="grid">
+        <div class="card" style="box-shadow:none">
+          <div class="body">
+            ${lines.map(([k,v])=>`
+              <div class="row" style="justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line)">
+                <div class="muted">${escapeHtml(k)}</div>
+                <div class="mono" style="text-align:right; max-width:60%">${escapeHtml(String(v))}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  /* =========================
+     New game / settings / end / delete
+  ========================= */
+  async function newGameWizard(){
+    openModal("Nueva partida", "Configura lo esencial (puedes editar después exportando/importando en futuro).", `
+      <div class="form">
+        <div class="field">
+          <label>Nombre de la partida</label>
+          <input id="gName" placeholder="Ej: Monopoly Navideño" />
+        </div>
+        <div class="field">
+          <label>Saldo inicial por jugador</label>
+          <input id="startMoney" inputmode="numeric" value="${DEFAULT_RULES.startMoney}" />
+        </div>
+        <div class="field">
+          <label>Dinero por pasar GO</label>
+          <input id="passGo" inputmode="numeric" value="${DEFAULT_RULES.passGo}" />
+        </div>
+        <div class="field">
+          <label>Multa salida de cárcel</label>
+          <input id="jailFine" inputmode="numeric" value="${DEFAULT_RULES.jailFine}" />
+        </div>
+        <div class="field">
+          <label>Alerta de saldo bajo</label>
+          <input id="lowAlert" inputmode="numeric" value="${DEFAULT_RULES.lowBalanceAlert}" />
+        </div>
+        <div class="row wrap">
+          <button class="btn primary" id="createGame">Crear</button>
+          <button class="btn ghost" id="cancel">Cancelar</button>
+        </div>
+        <div class="helper">Se cargan automáticamente las propiedades del tablero (calles, ferrocarriles y servicios).</div>
+      </div>
+    `);
+    $("#cancel").onclick = closeModal;
+    $("#createGame").onclick = async ()=>{
+      try{
+        const name = ($("#gName").value||"").trim() || "Partida";
+        const g = {
+          id: uid(),
+          name,
+          createdAt: nowISO(),
+          updatedAt: nowISO(),
+          isActive: true,
+          isPaused: false,
+          endedAt: null,
+          currentTurnPlayerId: null,
+          rules: {
+            startMoney: clampInt($("#startMoney").value, DEFAULT_RULES.startMoney),
+            passGo: clampInt($("#passGo").value, DEFAULT_RULES.passGo),
+            jailFine: clampInt($("#jailFine").value, DEFAULT_RULES.jailFine),
+            lowBalanceAlert: clampInt($("#lowAlert").value, DEFAULT_RULES.lowBalanceAlert),
+            allowUndo: true
+          }
+        };
+
+        // Deactivate any other active game
+        const games = await idbGetAll("games");
+        for(const old of games){
+          if(old.isActive){
+            old.isActive = false;
+            old.endedAt = old.endedAt || nowISO();
+            await idbPut("games", old);
+          }
+        }
+
+        await idbPut("games", g);
+        state.activeGameId = g.id;
+        state.game = g;
+        state.players = [];
+        state.props = [];
+        state.txs = [];
+        await seedProperties(g.id);
+        await loadActiveGame();
+        await addTx({ id:uid(), gameId:g.id, ts:nowISO(), kind:"system", note:"Partida creada", tags:["system"] });
+        await refreshAll();
+        closeModal();
+        toast("Partida creada ✅");
+      }catch(e){
+        toast("Error: " + e.message);
+      }
+    };
+  }
+
+  async function addPlayerDialog(){
+    const rules = gameRules();
+    openModal("Agregar jugador", "Se genera un código único para su QR.", `
+      <div class="form">
+        <div class="field">
+          <label>Nombre</label>
+          <input id="pName" placeholder="Ej: Rafael" />
+        </div>
+        <div class="field">
+          <label>Color (UI)</label>
+          <input id="pColor" type="color" value="#7c3aed" />
+        </div>
+        <div class="field">
+          <label>Saldo inicial</label>
+          <input id="pMoney" inputmode="numeric" value="${rules.startMoney}" />
+        </div>
+        <div class="row wrap">
+          <button class="btn primary" id="saveP">Guardar</button>
+          <button class="btn ghost" id="cancelP">Cancelar</button>
+        </div>
+      </div>
+    `);
+    $("#cancelP").onclick = closeModal;
+    $("#saveP").onclick = async ()=>{
+      try{
+        const name = ($("#pName").value||"").trim();
+        if(!name) return toast("Pon un nombre.");
+        const color = $("#pColor").value || "#94a3b8";
+        const balance = clampInt($("#pMoney").value, rules.startMoney);
+        // Ensure unique "code" (string used by QR)
+        let code;
+        do{ code = "P-" + crypto.getRandomValues(new Uint32Array(2)).join("").slice(0,16); }
+        while(state.players.some(x=>x.code===code));
+
+        const p = {
+          id: uid(),
+          gameId: state.game.id,
+          name,
+          color,
+          code,
+          balance,
+          createdAt: nowISO(),
+          updatedAt: nowISO(),
+          order: state.players.length,
+          inJail: false,
+          jailCard: false,
+          isBankrupt: false,
+          low: false
+        };
+        await savePlayer(p);
+        await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"system", note:`Jugador agregado: ${name}`, tags:["player"] });
+        await refreshAll();
+        closeModal();
+        toast("Jugador agregado ✅");
+      }catch(e){
+        toast("Error: " + e.message);
+      }
+    };
+  }
+
+  async function pauseGame(){
+    if(!state.game) return;
+    state.game.isPaused = true;
+    state.game.updatedAt = nowISO();
+    await saveGame(state.game);
+    await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"system", note:"Partida pausada", tags:["system"] });
+    await refreshAll();
+    toast("Pausada ✅");
+  }
+  async function resumeGame(){
+    if(!state.game) return;
+    state.game.isPaused = false;
+    state.game.updatedAt = nowISO();
+    await saveGame(state.game);
+    await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"system", note:"Partida reanudada", tags:["system"] });
+    await refreshAll();
+    toast("Reanudada ✅");
+  }
+  async function endGame(){
+    if(!state.game) return;
+    if(!confirm("¿Finalizar la partida? Se conservarán datos para exportar, pero se marcará como terminada.")) return;
+    state.game.isActive = false;
+    state.game.endedAt = nowISO();
+    state.game.updatedAt = nowISO();
+    await saveGame(state.game);
+    await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"system", note:"Partida finalizada", tags:["system"] });
+    await refreshAll();
+    toast("Finalizada ✅");
+  }
+
+  async function deleteCurrentGame(){
+    if(!state.game) return;
+    if(!confirm("¿Borrar la partida actual COMPLETA (jugadores, propiedades y movimientos)?")) return;
+
+    const gid = state.game.id;
+    const players = await idbGetAllByIndex("players","gameId", gid);
+    const props = await idbGetAllByIndex("properties","gameId", gid);
+    const txs = await idbGetAllByIndex("transactions","gameId", gid);
+
+    for(const t of txs) await idbDelete("transactions", t.id);
+    for(const p of props) await idbDelete("properties", p.id);
+    for(const pl of players) await idbDelete("players", pl.id);
+    await idbDelete("games", gid);
+
+    await loadActiveGame();
+    await refreshAll();
+    toast("Partida borrada ✅");
+  }
+
+  /* =========================
+     Cards + Jail (quick flows)
+  ========================= */
+  async function cardFlow(){
+    const p = await pickPlayerFlow("Jugador (carta)");
+    if(!p) return;
+
+    const rules = gameRules();
+    const cards = [
+      { title:"Cobrar por pasar GO", delta:+rules.passGo, note:"Carta: GO" },
+      { title:"Gana un premio", delta:+100, note:"Carta: premio" },
+      { title:"Paga una multa", delta:-50, note:"Carta: multa" },
+      { title:"Paga impuesto", delta:-rules.incomeTax, note:"Carta: impuesto" },
+      { title:"Cobra de todos", kind:"collect_all" },
+      { title:"Paga a todos", kind:"pay_all" },
+      { title:"Carta salida de cárcel", kind:"jail_card" }
+    ];
+
+    openModal("Carta", `${p.name} — elige el efecto`, `
+      <div class="grid">
+        <div class="list">
+          ${cards.map((c,i)=>`
+            <div class="item" data-card="${i}">
+              <div class="meta">
+                <div class="name">${escapeHtml(c.title)}</div>
+                <div class="sub">${c.delta!=null ? `Δ ${c.delta>=0?"+":"−"}${fmtMoney(Math.abs(c.delta))}` : (c.kind==="collect_all"?"Cobrar a todos":"Pagar a todos")}</div>
+              </div>
+              <button class="btn small ghost">Aplicar</button>
+            </div>
+          `).join("")}
+        </div>
+        <div class="helper">Puedes ajustar montos en el Banco si tu edición del juego difiere.</div>
+      </div>
+    `);
+
+    $$("#modalBody [data-card]").forEach(el=>{
+      el.onclick = async ()=>{
+        const c = cards[Number(el.dataset.card)];
+        try{
+          if(c.delta!=null){
+            await applyMoneyChange(p.id, c.delta, { kind:"card", note:c.note, tags:["card"] });
+            await refreshAll(); toast("Aplicada ✅"); closeModal();
+            return;
+          }
+          if(c.kind==="collect_all"){
+            const amt = clampInt(prompt("¿Cuánto cobra de cada jugador? (ej: 50)")||"0",0);
+            if(amt<=0) return toast("Monto inválido.");
+            for(const other of state.players){
+              if(other.id===p.id || other.isBankrupt) continue;
+              await applyTransfer(other.id, p.id, amt, `Carta: cobra de todos (${p.name})`, ["card","collect_all"]);
+            }
+            await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"card", playerId:p.id, note:`Carta: cobró de todos (${fmtMoney(amt)} c/u)`, tags:["card"] });
+            await refreshAll(); toast("Aplicada ✅"); closeModal();
+            return;
+          }
+          if(c.kind==="pay_all"){
+            const amt = clampInt(prompt("¿Cuánto paga a cada jugador? (ej: 50)")||"0",0);
+            if(amt<=0) return toast("Monto inválido.");
+            for(const other of state.players){
+              if(other.id===p.id || other.isBankrupt) continue;
+              await applyTransfer(p.id, other.id, amt, `Carta: paga a todos (${p.name})`, ["card","pay_all"]);
+            }
+            await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"card", playerId:p.id, note:`Carta: pagó a todos (${fmtMoney(amt)} c/u)`, tags:["card"] });
+            await refreshAll(); toast("Aplicada ✅"); closeModal();
+            return;
+          }
+          if(c.kind==="jail_card"){
+            p.jailCard = true;
+            await savePlayer(p);
+            await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"card", playerId:p.id, note:"Recibió carta: salida de cárcel", tags:["card","jail_card"] });
+            await refreshAll(); toast("Carta guardada ✅"); closeModal();
+          }
+        }catch(e){
+          toast("Error: " + e.message);
+        }
+      };
+    });
+  }
+
+  async function jailFlow(){
+    const p = await pickPlayerFlow("Jugador (cárcel)");
+    if(!p) return;
+    const rules = gameRules();
+    openModal("Cárcel", `${p.name} · estado actual: ${p.inJail ? "🚔 En cárcel" : "Libre"}`, `
+      <div class="grid">
+        <div class="pill2">
+          <div class="row wrap">
+            <span class="chip">Estado: <strong>${p.inJail ? "En cárcel" : "Libre"}</strong></span>
+            <span class="chip">Carta salida: <strong>${p.jailCard ? "Sí" : "No"}</strong></span>
+            <span class="chip">Multa: <strong>${fmtMoney(rules.jailFine)}</strong></span>
+          </div>
+        </div>
+        <div class="row wrap">
+          <button class="btn" id="sendJail">Enviar a la cárcel</button>
+          <button class="btn primary" id="payOut">Pagar salida</button>
+          <button class="btn" id="useCard" ${p.jailCard ? "" : "disabled"}>Usar carta</button>
+          <button class="btn ghost" id="toggleFree">Marcar libre</button>
+        </div>
+        <div class="helper">La app sólo gestiona el estado financiero y de cárcel; el movimiento en tablero lo haces tú.</div>
+      </div>
+    `);
+
+    $("#sendJail").onclick = async ()=>{
+      p.inJail = true; await savePlayer(p);
+      await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"jail", playerId:p.id, note:"Enviado a la cárcel", tags:["jail"] });
+      await refreshAll(); toast("Listo ✅"); closeModal();
+    };
+    $("#payOut").onclick = async ()=>{
+      await applyMoneyChange(p.id, -rules.jailFine, { kind:"jail", note:"Pago salida de cárcel", tags:["jail","fine"] });
+      p.inJail = false; await savePlayer(p);
+      await refreshAll(); toast("Salió ✅"); closeModal();
+    };
+    $("#useCard").onclick = async ()=>{
+      p.jailCard = false; p.inJail = false;
+      await savePlayer(p);
+      await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"jail", playerId:p.id, note:"Usó carta salida de cárcel", tags:["jail","card"] });
+      await refreshAll(); toast("Salió ✅"); closeModal();
+    };
+    $("#toggleFree").onclick = async ()=>{
+      p.inJail = false; await savePlayer(p);
+      await addTx({ id:uid(), gameId:state.game.id, ts:nowISO(), kind:"jail", playerId:p.id, note:"Marcado como libre", tags:["jail"] });
+      await refreshAll(); toast("Libre ✅"); closeModal();
+    };
+  }
+
+  /* =========================
+     Export
+  ========================= */
+  async function exportJSON(){
+    const g = state.game;
+    if(!g) return;
+    const payload = {
+      exportedAt: nowISO(),
+      db: DB_NAME,
+      game: g,
+      players: state.players,
+      properties: state.props,
+      transactions: state.txs
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `banco_virtual_${g.name.replace(/\s+/g,"_").toLowerCase()}_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /* =========================
+     Settings modal
+  ========================= */
+  async function settingsModal(){
+    const g = state.game;
+    openModal("Ajustes", "Herramientas y accesos rápidos", `
+      <div class="grid">
+        <div class="card" style="box-shadow:none">
+          <div class="head">
+            <div style="flex:1"><h3>Acciones</h3><p>Escaneo, exportación y control.</p></div>
+          </div>
+          <div class="body grid">
+            <button class="btn" id="sScan">📷 Escanear QR</button>
+            <button class="btn" id="sExport" ${g ? "" : "disabled"}>⬇ Exportar JSON</button>
+            <button class="btn danger" id="sWipe">☠ Borrar TODO (reset)</button>
+          </div>
+        </div>
+        <div class="notice">
+          Si tu navegador no soporta escaneo nativo, puedes pegar el código manualmente.
+        </div>
+      </div>
+    `);
+    $("#sScan").onclick = async ()=>{
+      closeModal();
+      const p = await pickPlayerFlow("Escaneo rápido");
+      if(p) showPlayerDetails(p.id);
+    };
+    $("#sExport").onclick = async ()=>{
+      await exportJSON();
+      toast("Exportado ✅");
+    };
+    $("#sWipe").onclick = async ()=>{
+      if(!confirm("¿Borrar TODO (reset total de IndexedDB)?")) return;
+      await wipeAll();
+      await loadActiveGame();
+      await refreshAll();
+      toast("Reset completo ✅");
+      closeModal();
+    };
+  }
+
+  /* =========================
+     Toast (mini)
+  ========================= */
+  let toastTimer = null;
+  function toast(msg){
+    // simple toast via status pill
+    const pill = $("#statusPill");
+    const old = pill.textContent;
+    pill.textContent = msg;
+    pill.style.borderColor = "rgba(124,58,237,.45)";
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{
+      pill.style.borderColor = "var(--line)";
+      setHeader(); // restore
+    }, 1400);
+  }
+
+  /* =========================
+     Event wiring: tabs + buttons
+  ========================= */
+  $$(".tab").forEach(t=>{
+    t.addEventListener("click", ()=>{
+      setPage(t.dataset.page);
+      if(t.dataset.page==="bank") renderBank();
+      if(t.dataset.page==="props") renderProps();
+      if(t.dataset.page==="audit") renderAudit();
+      if(t.dataset.page==="players") renderPlayers();
+      if(t.dataset.page==="home") renderHome();
+    });
+  });
+
+  $("#btnSettings").onclick = settingsModal;
+  $("#btnQuickScan").onclick = async ()=>{
+    const p = await pickPlayerFlow("Escaneo rápido");
+    if(p) showPlayerDetails(p.id);
+  };
+
+  $("#btnNewGame").onclick = newGameWizard;
+  $("#btnAddPlayer").onclick = addPlayerDialog;
+
+  $("#btnPause").onclick = pauseGame;
+  $("#btnResume").onclick = resumeGame;
+  $("#btnEndGame").onclick = endGame;
+
+  $("#btnQuickCredit").onclick = async ()=>{
+    const p = await pickPlayerFlow("Cobrar del banco (jugador)");
+    if(!p) return;
+    openBankPrefilled("credit", p.id);
+  };
+  $("#btnQuickPay").onclick = async ()=>{
+    const p = await pickPlayerFlow("Pagar al banco (jugador)");
+    if(!p) return;
+    openBankPrefilled("pay", p.id);
+  };
+  $("#btnQuickTransfer").onclick = ()=>{ setPage("bank"); setBankMode("transfer"); };
+  $("#btnQuickRent").onclick = ()=>{ setPage("bank"); setBankMode("rent"); };
+  $("#btnQuickBuyProp").onclick = ()=>{ setPage("props"); };
+  $("#btnQuickBuild").onclick = ()=>{ setPage("props"); toast("Toca una calle y usa “Casas/Hotel”"); };
+  $("#btnQuickJail").onclick = jailFlow;
+  $("#btnQuickCard").onclick = cardFlow;
+
+  $("#btnExport").onclick = exportJSON;
+  $("#btnDeleteGame").onclick = deleteCurrentGame;
+  $("#btnWipeAll").onclick = async ()=>{
+    if(!confirm("¿Borrar TODO (reset total de IndexedDB)?")) return;
+    await wipeAll();
+    await loadActiveGame();
+    await refreshAll();
+    toast("Reset completo ✅");
+  };
+
+  $("#propFilter").addEventListener("input", ()=>renderProps());
+  $("#btnPropActions").onclick = async ()=>{
+    openModal("Acciones de Propiedades", "Atajos comunes", `
+      <div class="grid">
+        <button class="btn" id="pickProp">🔎 Elegir propiedad y abrir</button>
+        <button class="btn" id="buyAny">🏠 Comprar propiedad (elige)</button>
+        <button class="btn" id="mortAny">🧾 Hipoteca (elige)</button>
+        <button class="btn ghost" id="closePA">Cerrar</button>
+        <div class="helper">Recomendado: usa el filtro y toca una propiedad.</div>
+      </div>
+    `);
+    $("#closePA").onclick = closeModal;
+    $("#pickProp").onclick = async ()=>{
+      closeModal();
+      // pick list of props
+      const options = state.props.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} (${groupLabel(p.group)})</option>`).join("");
+      openModal("Elegir propiedad", "", `
+        <div class="form">
+          <div class="field">
+            <label>Propiedad</label>
+            <select id="pSel">${options}</select>
+          </div>
+          <button class="btn primary" id="openProp">Abrir</button>
+        </div>
+      `);
+      $("#openProp").onclick = ()=>{
+        const id = $("#pSel").value;
+        closeModal();
+        showPropDetails(id);
+      };
+    };
+    $("#buyAny").onclick = async ()=>{
+      closeModal();
+      toast("Toca una propiedad sin dueño y presiona Comprar.");
+    };
+    $("#mortAny").onclick = async ()=>{
+      closeModal();
+      toast("Toca una propiedad con dueño y usa Hipotecar.");
+    };
+  };
+
+  /* =========================
+     Bank segmented control
+  ========================= */
+  function setBankMode(mode){
+    state.bankMode = mode;
+    $$("#bankSegment button").forEach(b=>b.classList.toggle("active", b.dataset.mode===mode));
+    renderBank();
+  }
+  $("#bankSegment").addEventListener("click", (e)=>{
+    const b = e.target.closest("button[data-mode]");
+    if(!b) return;
+    setBankMode(b.dataset.mode);
+  });
+
+  /* =========================
+     Refresh pipeline
+  ========================= */
+  async function refreshAll(){
+    await loadActiveGame();
+    setHeader();
+    enableGameButtons();
+    renderHome();
+    // keep current page rendered
+    const activeTab = $$(".tab").find(t=>t.classList.contains("active"))?.dataset.page || "home";
+    if(activeTab==="players") renderPlayers();
+    if(activeTab==="bank") renderBank();
+    if(activeTab==="props") renderProps();
+    if(activeTab==="audit") renderAudit();
+  }
+
+  /* =========================
+     Boot
+  ========================= */
+  async function boot(){
+    db = await idbOpen();
+    await loadActiveGame();
+    setHeader();
+    enableGameButtons();
+    renderHome();
+    // If game exists but no properties (unlikely), seed them
+    if(state.game && state.props.length===0){
+      await seedProperties(state.game.id);
+      await loadActiveGame();
+    }
+  }
+
+  boot().catch(err=>{
+    console.error(err);
+    openModal("Error", "No se pudo iniciar la app", `
+      <div class="dangerBox">
+        <strong>Error:</strong> ${escapeHtml(err.message || String(err))}
+        <div class="small">Verifica que tu navegador soporte IndexedDB (casi todos lo soportan).</div>
+      </div>
+    `);
+  });
+
+  /* ============================================================
+     QR Encoder minimal (Best-effort)
+     - Implementa QR Version 2..?? con EC Level L
+     - Para nuestros códigos "P-xxxx", es suficiente.
+     - Si quieres soporte total (UTF-8 largo, etc.), lo mejor es reemplazarlo con un encoder más completo.
+     ============================================================ */
+  const QRCodeEncoder = (() => {
+    // Based on small QR "byte mode" encoder ideas; implement version auto small
+    // We keep it tiny and pragmatic for "player codes" (short text).
+    // Returns { modules: boolean[][] }
+    // NOTE: This is not the full ISO spec implementation; it's a compact generator that works well in practice for short payloads.
+
+    function encode(text){
+      const bytes = new TextEncoder().encode(String(text));
+      // choose version by length (rough): v2-L ~ 34 bytes, v3-L ~ 55 bytes, v4-L ~ 80 bytes
+      const v = bytes.length <= 34 ? 2 : bytes.length <= 55 ? 3 : 4;
+      const size = 17 + 4*v;
+      const modules = Array.from({length:size}, ()=>Array(size).fill(null));
+      const isFn = Array.from({length:size}, ()=>Array(size).fill(false));
+
+      // Finder patterns
+      function placeFinder(r,c){
+        for(let y=-1;y<=7;y++){
+          for(let x=-1;x<=7;x++){
+            const rr=r+y, cc=c+x;
+            if(rr<0||cc<0||rr>=size||cc>=size) continue;
+            const on =
+              (y>=0&&y<=6&&x>=0&&x<=6) &&
+              (y===0||y===6||x===0||x===6 || (y>=2&&y<=4&&x>=2&&x<=4));
+            modules[rr][cc] = !!on;
+            isFn[rr][cc] = true;
+          }
+        }
+      }
+      placeFinder(0,0);
+      placeFinder(0,size-7);
+      placeFinder(size-7,0);
+
+      // Timing patterns
+      for(let i=8;i<size-8;i++){
+        modules[6][i] = (i%2===0);
+        modules[i][6] = (i%2===0);
+        isFn[6][i]=true; isFn[i][6]=true;
+      }
+
+      // Dark module
+      modules[4*v+9][8] = true;
+      isFn[4*v+9][8] = true;
+
+      // Format info placeholder (we'll write a fixed mask+EC)
+      // Use EC=L and mask=0 (111011111000100) typical for L,mask0
+      // We'll set later.
+
+      // Data encoding (byte mode) with simple padding; we skip full RS details by using a precomputed generator for small versions.
+      const dataBits = [];
+      const pushBits = (val, len)=>{
+        for(let i=len-1;i>=0;i--) dataBits.push((val>>>i)&1);
+      };
+      // Mode indicator: 0100 (byte)
+      pushBits(0b0100,4);
+      // Character count
+      const ccBits = (v<=9)?8:16;
+      pushBits(bytes.length, ccBits);
+      // Data bytes
+      for(const b of bytes) pushBits(b,8);
+      // Terminator
+      const cap = dataCapacityBits(v); // total data bits (without ecc) for L (rough)
+      const terminator = Math.min(4, cap - dataBits.length);
+      if(terminator>0) pushBits(0, terminator);
+      // Pad to byte
+      while(dataBits.length % 8) dataBits.push(0);
+      // Pad bytes 0xEC,0x11
+      let padByte = 0;
+      const padSeq = [0xEC, 0x11];
+      let k=0;
+      while(dataBits.length < cap){
+        pushBits(padSeq[k%2], 8);
+        k++;
+      }
+
+      // ECC: We use small fixed RS for versions 2-4 L (approx). This is a simplified RS encoder.
+      const dataBytes = bitsToBytes(dataBits);
+      const eccBytes = reedSolomonECC(v, dataBytes);
+
+      const allBytes = dataBytes.concat(eccBytes);
+      const allBits = [];
+      for(const b of allBytes) pushBitsTo(allBits, b, 8);
+
+      // Place data bits in zigzag
+      let bitIndex = 0;
+      for(let col=size-1; col>0; col-=2){
+        if(col===6) col--; // skip timing col
+        for(let row=0; row<size; row++){
+          const r = ((col/2)%2===0) ? (size-1-row) : row; // up/down
+          for(let cc=0; cc<2; cc++){
+            const c = col-cc;
+            if(isFn[r][c]) continue;
+            const bit = allBits[bitIndex++] ?? 0;
+            // mask 0: (r+c)%2==0
+            const masked = ((r+c)%2===0) ? (bit^1) : bit;
+            modules[r][c] = !!masked;
+          }
+        }
+      }
+
+      // Write format info for EC=L, mask=0
+      const format = 0b111011111000100; // L, mask 0 (with BCH)
+      const fmtBits = [];
+      for(let i=14;i>=0;i--) fmtBits.push((format>>>i)&1);
+
+      const fmtPos = [
+        // around top-left
+        [8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]
+      ];
+      for(let i=0;i<15;i++){
+        const [r,c] = fmtPos[i];
+        modules[r][c] = !!fmtBits[i]; isFn[r][c]=true;
+      }
+      // other format (top-right / bottom-left)
+      const fmtPos2 = [
+        [0,size-1],[1,size-1],[2,size-1],[3,size-1],[4,size-1],[5,size-1],[7,size-1],[8,size-1],
+        [size-1,8],[size-2,8],[size-3,8],[size-4,8],[size-5,8],[size-6,8],[size-7,8]
+      ];
+      for(let i=0;i<15;i++){
+        const [r,c] = fmtPos2[i];
+        modules[r][c] = !!fmtBits[i]; isFn[r][c]=true;
+      }
+
+      // fill any nulls with false
+      for(let r=0;r<size;r++){
+        for(let c=0;c<size;c++){
+          if(modules[r][c]===null) modules[r][c]=false;
+        }
+      }
+      return { modules };
+    }
+
+    function pushBitsTo(arr, val, len){
+      for(let i=len-1;i>=0;i--) arr.push((val>>>i)&1);
+    }
+    function bitsToBytes(bits){
+      const out=[];
+      for(let i=0;i<bits.length;i+=8){
+        let b=0;
+        for(let j=0;j<8;j++) b=(b<<1)|(bits[i+j]||0);
+        out.push(b);
+      }
+      return out;
+    }
+    function dataCapacityBits(version){
+      // Approx capacities for L (data codewords only) * 8
+      // v2-L: 34 bytes, v3-L: 55 bytes, v4-L: 80 bytes
+      const bytes = version===2 ? 34 : version===3 ? 55 : 80;
+      return bytes * 8;
+    }
+
+    // Tiny RS encoder for versions 2-4 L
+    function reedSolomonECC(version, dataBytes){
+      // ECC codewords count (L):
+      // v2-L: 10, v3-L: 15, v4-L: 20  (simplified typical)
+      const ecLen = version===2 ? 10 : version===3 ? 15 : 20;
+      const gen = rsGeneratorPoly(ecLen);
+      const msg = dataBytes.concat(Array(ecLen).fill(0));
+      for(let i=0;i<dataBytes.length;i++){
+        const coef = msg[i];
+        if(coef===0) continue;
+        for(let j=0;j<gen.length;j++){
+          msg[i+j] ^= gfMul(gen[j], coef);
+        }
+      }
+      return msg.slice(msg.length-ecLen);
+    }
+
+    // GF(256) with primitive poly 0x11d
+    const gfExp = new Uint8Array(512);
+    const gfLog = new Uint8Array(256);
+    (function initGF(){
+      let x=1;
+      for(let i=0;i<255;i++){
+        gfExp[i]=x;
+        gfLog[x]=i;
+        x<<=1;
+        if(x&0x100) x^=0x11d;
+      }
+      for(let i=255;i<512;i++) gfExp[i]=gfExp[i-255];
+    })();
+
+    function gfMul(a,b){
+      if(a===0||b===0) return 0;
+      return gfExp[gfLog[a]+gfLog[b]];
+    }
+
+    function rsGeneratorPoly(deg){
+      // (x - a^0)(x - a^1)... in GF; returns coefficients
+      let poly=[1];
+      for(let i=0;i<deg;i++){
+        poly = polyMul(poly, [1, gfExp[i]]);
+      }
+      return poly;
+    }
+    function polyMul(p,q){
+      const out = Array(p.length+q.length-1).fill(0);
+      for(let i=0;i<p.length;i++){
+        for(let j=0;j<q.length;j++){
+          out[i+j] ^= gfMul(p[i], q[j]);
+        }
+      }
+      return out;
+    }
+
+    return { encode };
+  })();
+
+})();
+</script>
+</body>
+</html>
